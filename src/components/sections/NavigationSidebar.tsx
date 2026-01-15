@@ -65,8 +65,8 @@ const NavigationSidebar = () => {
               )}
             >
               <span className="font-bold text-sm whitespace-nowrap tracking-tight">
-                Claude Predicts
-              </span>
+                  HyperClaude
+                </span>
             </div>
           </a>
         </div>

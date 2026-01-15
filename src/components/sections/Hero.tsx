@@ -37,7 +37,7 @@ const Hero = () => {
                 rel="noopener noreferrer"
                 className="text-xs text-white/60 hover:text-white/90 transition-colors flex items-center gap-1"
               >
-                <span className="text-white/40">Claude&apos;s Wallet:</span>
+                <span className="text-white/40">HyperClaude Wallet:</span>
                 <span className="font-mono">opus...3n6a</span>
               </a>
             </div>
@@ -48,7 +48,7 @@ const Hero = () => {
             <svg className="h-8 w-8 md:h-10 md:w-10 text-white flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z" />
             </svg>
-            <span>Claude Predicts</span>
+            <span>HyperClaude</span>
           </h1>
           
           <p className="text-lg text-white/80 max-w-2xl mb-8 leading-relaxed">
@@ -108,9 +108,9 @@ const Hero = () => {
             <div className="p-4 max-h-[380px] overflow-y-auto terminal-scrollbar space-y-4">
               {/* Active Analysis Indicator */}
               <div className="flex items-center gap-2 pb-2 border-b border-white/10">
-                <span className="text-xs text-white/40 font-mono">
-                  Claude is analyzing markets<span className="inline-flex w-4 animate-pulse">...</span>
-                </span>
+                  <span className="text-xs text-white/40 font-mono">
+                    HyperClaude is analyzing markets<span className="inline-flex w-4 animate-pulse">...</span>
+                  </span>
               </div>
 
               {/* Log Entry: New Market */}
