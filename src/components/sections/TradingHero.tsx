@@ -11,7 +11,7 @@ export default function TradingHero() {
 
   const heroStats = [
     { label: "Today", value: stats.todayPnl, prefix: stats.todayPnl >= 0 ? "+$" : "-$", suffix: "", color: stats.todayPnl >= 0 ? "profit" : "loss" },
-    { label: "24H Volume", value: stats.volume24h / 1000000, prefix: "$", suffix: "M", color: "primary" },
+    { label: "24H Volume", value: stats.volume24h / 1000, prefix: "$", suffix: "K", color: "primary" },
     { label: "Win Rate", value: stats.winRate, prefix: "", suffix: "%", color: "profit" },
     { label: "Total Trades", value: stats.totalTrades, prefix: "", suffix: "", color: "primary" },
     { label: "Win Streak", value: stats.currentStreak, prefix: "", suffix: "", color: "warning", icon: Flame },
