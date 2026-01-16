@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Thoughts", href: "#thoughts" },
 ];
 
-const CONTRACT_ADDRESS = "";
+const CONTRACT_ADDRESS: string = "";
 const LOGO_URL = "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/project-uploads/025fcd57-8db7-4d7c-a032-584873a51655/claudeperps-1768524261661.jpg?width=8000&height=8000&resize=contain";
 
 export default function TopNavBar() {
