@@ -78,44 +78,58 @@ export default function FooterLinks() {
             ))}
           </div>
 
-          <div className="relative max-w-md mx-auto">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-profit/10 rounded-xl blur-xl" />
-            <div className="relative p-6 rounded-xl bg-surface border border-border">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">
-                Contract Address
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <code className="font-mono text-lg text-foreground">
-                  {CONTRACT_ADDRESS}
-                </code>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleCopy}
-                  className={`p-2 rounded-lg border transition-all duration-300 ${
-                    copied 
-                      ? "bg-profit/10 border-profit/30 text-profit" 
-                      : "bg-surface-light border-border hover:border-primary/50 text-muted-foreground hover:text-primary"
-                  }`}
-                >
-                  {copied ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    <Copy className="w-5 h-5" />
+            {CONTRACT_ADDRESS ? (
+              <div className="relative max-w-md mx-auto">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-profit/10 rounded-xl blur-xl" />
+                <div className="relative p-6 rounded-xl bg-surface border border-border">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">
+                    Contract Address
+                  </p>
+                  <div className="flex items-center justify-center gap-3">
+                    <code className="font-mono text-lg text-foreground">
+                      {CONTRACT_ADDRESS}
+                    </code>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleCopy}
+                      className={`p-2 rounded-lg border transition-all duration-300 ${
+                        copied 
+                          ? "bg-profit/10 border-profit/30 text-profit" 
+                          : "bg-surface-light border-border hover:border-primary/50 text-muted-foreground hover:text-primary"
+                      }`}
+                    >
+                      {copied ? (
+                        <Check className="w-5 h-5" />
+                      ) : (
+                        <Copy className="w-5 h-5" />
+                      )}
+                    </motion.button>
+                  </div>
+                  {copied && (
+                    <motion.p
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs text-profit mt-2"
+                    >
+                      Copied to clipboard!
+                    </motion.p>
                   )}
-                </motion.button>
+                </div>
               </div>
-              {copied && (
-                <motion.p
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-xs text-profit mt-2"
-                >
-                  Copied to clipboard!
-                </motion.p>
-              )}
-            </div>
-          </div>
+            ) : (
+              <div className="relative max-w-md mx-auto">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-profit/10 rounded-xl blur-xl" />
+                <div className="relative p-6 rounded-xl bg-surface border border-border">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">
+                    Contract Address
+                  </p>
+                  <div className="flex items-center justify-center">
+                    <span className="font-mono text-lg text-muted-foreground">TBA</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
           <div className="mt-12 pt-8 border-t border-border/50">
             <p className="text-xs text-muted-foreground">
