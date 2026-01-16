@@ -135,9 +135,9 @@ export default function TradingHero() {
 }
 
 function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
-  const { pathData, areaPath, isProfit, minVal, maxVal } = useMemo(() => {
+  const { pathData, areaPath, isProfit } = useMemo(() => {
     if (pnlHistory.length < 2) {
-      return { pathData: "", areaPath: "", isProfit: true, minVal: 0, maxVal: 100 };
+      return { pathData: "", areaPath: "", isProfit: true };
     }
 
     const values = pnlHistory.map(p => p.value);
@@ -147,18 +147,18 @@ function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
     const minV = min - padding;
     const maxV = max + padding;
     
-    const width = 100;
-    const height = 40;
+    const w = 100;
+    const h = 40;
     
     const path = pnlHistory
       .map((point, i) => {
-        const x = (i / (pnlHistory.length - 1)) * width;
-        const y = height - ((point.value - minV) / (maxV - minV)) * height;
+        const x = (i / (pnlHistory.length - 1)) * w;
+        const y = h - ((point.value - minV) / (maxV - minV)) * h;
         return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
       })
       .join(' ');
 
-    const area = path + ` L ${width} ${height} L 0 ${height} Z`;
+    const area = path + ` L ${w} ${h} L 0 ${h} Z`;
     const lastValue = pnlHistory[pnlHistory.length - 1]?.value || 0;
     const firstValue = pnlHistory[0]?.value || 0;
     
@@ -166,8 +166,6 @@ function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
       pathData: path, 
       areaPath: area, 
       isProfit: lastValue >= firstValue,
-      minVal: minV,
-      maxVal: maxV
     };
   }, [pnlHistory]);
 
