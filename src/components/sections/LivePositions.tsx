@@ -1,82 +1,26 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Layers, Target, Shield } from "lucide-react";
-import { useState, useEffect } from "react";
-
-interface Position {
-  id: string;
-  asset: string;
-  side: "LONG" | "SHORT";
-  size: string;
-  leverage: number;
-  entry: number;
-  mark: number;
-  pnl: number;
-  pnlPercent: number;
-  liquidation: number;
-}
-
-const initialPositions: Position[] = [
-  {
-    id: "1",
-    asset: "BTC-PERP",
-    side: "LONG",
-    size: "0.5 BTC",
-    leverage: 5,
-    entry: 97800,
-    mark: 98234,
-    pnl: 217,
-    pnlPercent: 2.22,
-    liquidation: 82000,
-  },
-  {
-    id: "2",
-    asset: "ETH-PERP",
-    side: "SHORT",
-    size: "2.0 ETH",
-    leverage: 10,
-    entry: 3450,
-    mark: 3420,
-    pnl: 60,
-    pnlPercent: 0.87,
-    liquidation: 3800,
-  },
-];
+import { motion, AnimatePresence } from "framer-motion";
+import { TrendingUp, TrendingDown, Layers, Target, Shield, Clock, Crosshair } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTradingStore, formatPrice, formatDuration } from "@/lib/trading-simulation";
 
 export default function LivePositions() {
-  const [positions, setPositions] = useState<Position[]>(initialPositions);
+  const { positions, marketPrices, updateMarketPrices, updatePositions } = useTradingStore();
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPositions((prev) =>
-        prev.map((pos) => {
-          const change = (Math.random() - 0.5) * 0.002;
-          const newMark = pos.mark * (1 + change);
-          const priceDiff = pos.side === "LONG" 
-            ? newMark - pos.entry 
-            : pos.entry - newMark;
-          const notional = pos.side === "LONG"
-            ? parseFloat(pos.size) * pos.entry
-            : parseFloat(pos.size) * pos.entry;
-          const newPnl = priceDiff * parseFloat(pos.size) * pos.leverage;
-          const newPnlPercent = (priceDiff / pos.entry) * 100 * pos.leverage;
-          
-          return {
-            ...pos,
-            mark: Math.round(newMark * 100) / 100,
-            pnl: Math.round(newPnl * 100) / 100,
-            pnlPercent: Math.round(newPnlPercent * 100) / 100,
-          };
-        })
-      );
-    }, 2000);
+    const priceInterval = setInterval(() => {
+      updateMarketPrices();
+      updatePositions();
+      setLastUpdate(Date.now());
+    }, 800);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(priceInterval);
+  }, [updateMarketPrices, updatePositions]);
 
   const totalPnl = positions.reduce((sum, pos) => sum + pos.pnl, 0);
-  const totalValue = positions.reduce((sum, pos) => sum + parseFloat(pos.size) * pos.mark, 0);
+  const totalValue = positions.reduce((sum, pos) => sum + pos.size * pos.markPrice, 0);
 
   return (
     <section id="positions" className="py-8">
@@ -95,7 +39,7 @@ export default function LivePositions() {
               </div>
               <div>
                 <h3 className="font-display text-lg font-bold tracking-wide">LIVE POSITIONS</h3>
-                <p className="text-xs text-muted-foreground">{positions.length} active trades</p>
+                <p className="text-xs text-muted-foreground">{positions.length} active trade{positions.length !== 1 ? "s" : ""}</p>
               </div>
             </div>
             <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
@@ -115,25 +59,35 @@ export default function LivePositions() {
           </div>
 
           <div className="rounded-xl overflow-hidden border border-border bg-surface/80 backdrop-blur-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-surface-light">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Asset</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Side</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Entry</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Mark</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">PnL</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {positions.map((position, index) => (
-                    <PositionRow key={position.id} position={position} index={index} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {positions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <Crosshair className="w-8 h-8 mb-3 opacity-50" />
+                <p className="text-sm">No active positions</p>
+                <p className="text-xs mt-1">AI is scanning for opportunities...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border bg-surface-light">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Asset</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Size</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Entry</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Mark</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">PnL</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Duration</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    <AnimatePresence mode="popLayout">
+                      {positions.map((position, index) => (
+                        <PositionRow key={position.id} position={position} index={index} />
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+            )}
             
             <div className="flex items-center justify-between px-4 py-3 bg-surface-light border-t border-border">
               <div className="flex items-center gap-4 text-xs">
@@ -146,9 +100,13 @@ export default function LivePositions() {
                   <span>Margin: <span className="text-profit font-mono">Healthy</span></span>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground font-mono">
-                Updated live
-              </span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-profit opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-profit" />
+                </span>
+                <span className="font-mono">Live</span>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -157,14 +115,36 @@ export default function LivePositions() {
   );
 }
 
-function PositionRow({ position, index }: { position: Position; index: number }) {
+function PositionRow({ position, index }: { position: ReturnType<typeof useTradingStore.getState>["positions"][0]; index: number }) {
   const isProfit = position.pnl >= 0;
+  const duration = Math.floor((Date.now() - position.openTime) / 1000);
+  const [flash, setFlash] = useState<"profit" | "loss" | null>(null);
+  const [prevPnl, setPrevPnl] = useState(position.pnl);
+
+  useEffect(() => {
+    if (position.pnl !== prevPnl) {
+      setFlash(position.pnl > prevPnl ? "profit" : "loss");
+      setPrevPnl(position.pnl);
+      const timer = setTimeout(() => setFlash(null), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [position.pnl, prevPnl]);
 
   return (
     <motion.tr
+      layout
       initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        backgroundColor: flash === "profit" 
+          ? "rgba(0, 255, 136, 0.1)" 
+          : flash === "loss" 
+          ? "rgba(255, 59, 92, 0.1)" 
+          : "transparent"
+      }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.2 }}
       className="hover:bg-surface-elevated/50 transition-colors"
     >
       <td className="px-4 py-4">
@@ -181,7 +161,7 @@ function PositionRow({ position, index }: { position: Position; index: number })
             )}
           </div>
           <div>
-            <span className="font-mono font-semibold text-foreground">{position.asset}</span>
+            <span className="font-mono font-semibold text-foreground">{position.asset}-PERP</span>
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                 position.side === "LONG"
@@ -197,32 +177,27 @@ function PositionRow({ position, index }: { position: Position; index: number })
           </div>
         </div>
       </td>
-      <td className="px-4 py-4">
-        <span className={`font-semibold ${position.side === "LONG" ? "text-profit" : "text-loss"}`}>
-          {position.side}
-        </span>
+      <td className="px-4 py-4 text-right">
+        <span className="font-mono text-foreground">{position.sizeDisplay}</span>
       </td>
       <td className="px-4 py-4 text-right">
-        <span className="font-mono text-foreground">{position.size}</span>
-      </td>
-      <td className="px-4 py-4 text-right">
-        <span className="font-mono text-muted-foreground">${position.entry.toLocaleString()}</span>
+        <span className="font-mono text-muted-foreground">${formatPrice(position.entryPrice)}</span>
       </td>
       <td className="px-4 py-4 text-right">
         <motion.span
-          key={position.mark}
+          key={position.markPrice}
           initial={{ opacity: 0.5 }}
           animate={{ opacity: 1 }}
-          className="font-mono text-foreground"
+          className={`font-mono ${flash === "profit" ? "text-profit" : flash === "loss" ? "text-loss" : "text-foreground"}`}
         >
-          ${position.mark.toLocaleString()}
+          ${formatPrice(position.markPrice)}
         </motion.span>
       </td>
       <td className="px-4 py-4 text-right">
         <div className="flex flex-col items-end">
           <motion.span
             key={position.pnl}
-            initial={{ scale: 1.1 }}
+            initial={{ scale: 1.05 }}
             animate={{ scale: 1 }}
             className={`font-mono font-bold ${isProfit ? "text-profit" : "text-loss"}`}
           >
@@ -231,6 +206,12 @@ function PositionRow({ position, index }: { position: Position; index: number })
           <span className={`text-xs font-mono ${isProfit ? "text-profit/70" : "text-loss/70"}`}>
             {isProfit ? "+" : ""}{position.pnlPercent.toFixed(2)}%
           </span>
+        </div>
+      </td>
+      <td className="px-4 py-4 text-right">
+        <div className="flex items-center justify-end gap-1.5 text-muted-foreground">
+          <Clock className="w-3.5 h-3.5" />
+          <span className="font-mono text-sm">{formatDuration(duration)}</span>
         </div>
       </td>
     </motion.tr>
