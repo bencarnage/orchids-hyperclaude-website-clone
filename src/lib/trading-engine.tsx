@@ -160,11 +160,12 @@ function generateInitialPnlHistory(basePnl: number): PnlDataPoint[] {
   const now = Date.now();
   const pointCount = 50;
   let currentValue = basePnl * 0.4;
+  const rand = seededRandom(Math.floor(now / 60000));
   
   for (let i = 0; i < pointCount; i++) {
     const progress = i / (pointCount - 1);
     const targetValue = basePnl * (0.4 + progress * 0.6);
-    const fluctuation = (Math.random() - 0.45) * basePnl * 0.08;
+    const fluctuation = (rand() - 0.45) * basePnl * 0.08;
     currentValue = targetValue + fluctuation;
     currentValue = Math.max(currentValue, basePnl * 0.2);
     
