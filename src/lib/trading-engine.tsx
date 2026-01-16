@@ -181,6 +181,9 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   });
   const [isAiActive] = useState(true);
   const [currentAction, setCurrentAction] = useState("ANALYZING");
+  const [pnlHistory, setPnlHistory] = useState<PnlDataPoint[]>(() => generateInitialPnlHistory(47832.5));
+  const fluctuationCycleRef = useRef(0);
+  const lastGrowthRef = useRef(Date.now());
   
   const pricesRef = useRef(prices);
   const positionsRef = useRef(positions);
