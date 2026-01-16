@@ -1,32 +1,19 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, TrendingUp, TrendingDown } from "lucide-react";
-
-interface RecentTrade {
-  id: string;
-  asset: string;
-  side: "LONG" | "SHORT";
-  pnl: number;
-  pnlPercent: number;
-  time: string;
-}
-
-const recentTrades: RecentTrade[] = [
-  { id: "1", asset: "BTC", side: "LONG", pnl: 389, pnlPercent: 0.79, time: "2m ago" },
-  { id: "2", asset: "ETH", side: "SHORT", pnl: 156, pnlPercent: 1.2, time: "15m ago" },
-  { id: "3", asset: "SOL", side: "LONG", pnl: -45, pnlPercent: -0.8, time: "28m ago" },
-  { id: "4", asset: "AVAX", side: "LONG", pnl: 89, pnlPercent: 0.45, time: "42m ago" },
-  { id: "5", asset: "ARB", side: "SHORT", pnl: 234, pnlPercent: 2.1, time: "1h ago" },
-  { id: "6", asset: "DOGE", side: "LONG", pnl: -28, pnlPercent: -0.5, time: "1h ago" },
-  { id: "7", asset: "LINK", side: "LONG", pnl: 167, pnlPercent: 1.8, time: "2h ago" },
-  { id: "8", asset: "BTC", side: "SHORT", pnl: 445, pnlPercent: 0.9, time: "3h ago" },
-  { id: "9", asset: "ETH", side: "LONG", pnl: 312, pnlPercent: 1.5, time: "4h ago" },
-  { id: "10", asset: "MATIC", side: "SHORT", pnl: -67, pnlPercent: -1.2, time: "5h ago" },
-];
+import { useTradingStore, formatTimeAgo } from "@/lib/trading-simulation";
+import { useEffect, useState } from "react";
 
 export default function RecentTradesTicker() {
-  const duplicatedTrades = [...recentTrades, ...recentTrades];
+  const { closedTrades } = useTradingStore();
+  const [displayTrades, setDisplayTrades] = useState(closedTrades);
+
+  useEffect(() => {
+    setDisplayTrades(closedTrades.slice(0, 15));
+  }, [closedTrades]);
+
+  const duplicatedTrades = [...displayTrades, ...displayTrades];
 
   return (
     <section className="py-6 overflow-hidden border-y border-border/50 bg-surface/30">
@@ -42,12 +29,14 @@ export default function RecentTradesTicker() {
         
         <div className="flex-1 overflow-hidden">
           <motion.div
-            className="flex gap-6 animate-ticker hover:pause"
+            className="flex gap-6 animate-ticker hover:[animation-play-state:paused]"
             style={{ width: "max-content" }}
           >
-            {duplicatedTrades.map((trade, index) => (
-              <TradeItem key={`${trade.id}-${index}`} trade={trade} />
-            ))}
+            <AnimatePresence mode="popLayout">
+              {duplicatedTrades.map((trade, index) => (
+                <TradeItem key={`${trade.id}-${index}`} trade={trade} />
+              ))}
+            </AnimatePresence>
           </motion.div>
         </div>
       </div>
@@ -55,11 +44,17 @@ export default function RecentTradesTicker() {
   );
 }
 
-function TradeItem({ trade }: { trade: RecentTrade }) {
+function TradeItem({ trade }: { trade: ReturnType<typeof useTradingStore.getState>["closedTrades"][0] }) {
   const isProfit = trade.pnl >= 0;
+  const timeAgo = formatTimeAgo(trade.closedAt);
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface-light/50 border border-border/30 hover:border-border transition-colors">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="flex items-center gap-3 px-4 py-2 rounded-lg bg-surface-light/50 border border-border/30 hover:border-border transition-colors"
+    >
       <div className={`w-6 h-6 rounded flex items-center justify-center ${
         isProfit ? "bg-profit/10" : "bg-loss/10"
       }`}>
@@ -83,14 +78,14 @@ function TradeItem({ trade }: { trade: RecentTrade }) {
       
       <div className="flex items-center gap-1.5">
         <span className={`font-mono font-bold text-sm ${isProfit ? "text-profit" : "text-loss"}`}>
-          {isProfit ? "+" : ""}${Math.abs(trade.pnl)}
+          {isProfit ? "+" : "-"}${Math.abs(trade.pnl).toFixed(0)}
         </span>
         <span className={`font-mono text-xs ${isProfit ? "text-profit/60" : "text-loss/60"}`}>
-          ({isProfit ? "+" : ""}{trade.pnlPercent}%)
+          ({isProfit ? "+" : ""}{trade.pnlPercent.toFixed(1)}%)
         </span>
       </div>
       
-      <span className="text-xs text-muted-foreground">{trade.time}</span>
-    </div>
+      <span className="text-xs text-muted-foreground">{timeAgo}</span>
+    </motion.div>
   );
 }
