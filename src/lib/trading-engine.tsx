@@ -476,93 +476,96 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     }
   }, [prices, positions.length, addThought, openPosition]);
 
-  useEffect(() => {
-    if (Object.keys(prices).length === 0) return;
+    useEffect(() => {
+      if (Object.keys(prices).length === 0) return;
 
-    const actionInterval = setInterval(() => {
-      const actions = ["ANALYZING", "SCANNING", "MONITORING", "CALCULATING", "TRADING"];
-      setCurrentAction(pickRandom(actions));
-    }, 4000);
+      const actionInterval = setInterval(() => {
+        const rand = getSeededRandom();
+        const actions = ["ANALYZING", "SCANNING", "MONITORING", "CALCULATING", "TRADING"];
+        setCurrentAction(seededPickRandom(rand, actions));
+      }, 4000);
 
-    const analysisInterval = setInterval(() => {
-      const availableSymbols = TRADING_PAIRS.filter(s => pricesRef.current[s]);
-      if (availableSymbols.length === 0) return;
+      const analysisInterval = setInterval(() => {
+        const rand = getSeededRandom();
+        const availableSymbols = TRADING_PAIRS.filter(s => pricesRef.current[s]);
+        if (availableSymbols.length === 0) return;
 
-      const symbol = pickRandom(availableSymbols);
-      const price = pricesRef.current[symbol]?.price;
-      if (!price) return;
+        const symbol = seededPickRandom(rand, availableSymbols);
+        const price = pricesRef.current[symbol]?.price;
+        if (!price) return;
 
-      const analysisTypes = [
-        {
-          type: "ANALYSIS" as const,
-          title: `${symbol} Market Structure Analysis`,
+        const analysisTypes = [
+          {
+            type: "ANALYSIS" as const,
+            title: `${symbol} Market Structure Analysis`,
+            content: [
+              `Current price: $${price.toLocaleString()} - ${seededRandomBetween(rand, -2, 2) > 0 ? "above" : "below"} 20 EMA.`,
+              `Volume: ${seededRandomBetween(rand, 80, 150).toFixed(0)}% of 24h average.`,
+              `Volatility index: ${seededRandomBetween(rand, 20, 80).toFixed(1)} - ${rand() > 0.5 ? "elevated" : "normal"} conditions.`,
+            ],
+          },
+          {
+            type: "MONITOR" as const,
+            title: "Portfolio Risk Assessment",
+            content: [
+              `Open positions: ${positionsRef.current.length} | Total exposure: $${positionsRef.current.reduce((a, p) => a + p.sizeUsd * p.leverage, 0).toLocaleString()}`,
+              `Current drawdown: ${seededRandomBetween(rand, 0, 5).toFixed(2)}% | Max allowed: 10%`,
+              "Risk parameters within acceptable bounds.",
+            ],
+          },
+          {
+            type: "ANALYSIS" as const,
+            title: "Funding Rate Scan",
+            content: [
+              `BTC funding: ${(seededRandomBetween(rand, -0.02, 0.02)).toFixed(4)}% - ${rand() > 0.5 ? "longs paying shorts" : "shorts paying longs"}`,
+              `ETH funding: ${(seededRandomBetween(rand, -0.02, 0.02)).toFixed(4)}%`,
+              "No significant funding arbitrage opportunities detected.",
+            ],
+          },
+        ];
+
+        addThought(seededPickRandom(rand, analysisTypes));
+      }, 15000);
+
+      const tradeInterval = setInterval(() => {
+        const rand = getSeededRandom();
+        if (positionsRef.current.length >= 4) return;
+        if (rand() > 0.3) return;
+
+        const availableSymbols = TRADING_PAIRS.filter(
+          s => pricesRef.current[s] && !positionsRef.current.find(p => p.symbol === s)
+        );
+        if (availableSymbols.length === 0) return;
+
+        const symbol = seededPickRandom(rand, availableSymbols);
+        const price = pricesRef.current[symbol]?.price;
+        if (!price) return;
+
+        const side = rand() > 0.5 ? "LONG" : "SHORT";
+
+        addThought({
+          type: "SIGNAL",
+          title: `${symbol} ${side === "LONG" ? "Bullish" : "Bearish"} Setup Detected`,
           content: [
-            `Current price: $${price.toLocaleString()} - ${randomBetween(-2, 2) > 0 ? "above" : "below"} 20 EMA.`,
-            `Volume: ${randomBetween(80, 150).toFixed(0)}% of 24h average.`,
-            `Volatility index: ${randomBetween(20, 80).toFixed(1)} - ${randomBetween(0, 1) > 0.5 ? "elevated" : "normal"} conditions.`,
+            side === "LONG" 
+              ? `Price breaking above ${seededRandomBetween(rand, 1, 3).toFixed(0)}H resistance at $${(price * 0.99).toLocaleString()}.`
+              : `Price rejected at ${seededRandomBetween(rand, 1, 3).toFixed(0)}H resistance near $${(price * 1.01).toLocaleString()}.`,
+            `Volume surge: ${seededRandomBetween(rand, 150, 300).toFixed(0)}% above average.`,
+            `Momentum indicators ${side === "LONG" ? "turning bullish" : "showing weakness"}.`,
           ],
-        },
-        {
-          type: "MONITOR" as const,
-          title: "Portfolio Risk Assessment",
-          content: [
-            `Open positions: ${positionsRef.current.length} | Total exposure: $${positionsRef.current.reduce((a, p) => a + p.sizeUsd * p.leverage, 0).toLocaleString()}`,
-            `Current drawdown: ${randomBetween(0, 5).toFixed(2)}% | Max allowed: 10%`,
-            "Risk parameters within acceptable bounds.",
-          ],
-        },
-        {
-          type: "ANALYSIS" as const,
-          title: "Funding Rate Scan",
-          content: [
-            `BTC funding: ${(randomBetween(-0.02, 0.02)).toFixed(4)}% - ${randomBetween(0, 1) > 0.5 ? "longs paying shorts" : "shorts paying longs"}`,
-            `ETH funding: ${(randomBetween(-0.02, 0.02)).toFixed(4)}%`,
-            "No significant funding arbitrage opportunities detected.",
-          ],
-        },
-      ];
+        });
 
-      addThought(pickRandom(analysisTypes));
-    }, 15000);
+        setTimeout(() => {
+          openPosition(symbol, side, price);
+        }, 2000);
+      }, 25000);
 
-    const tradeInterval = setInterval(() => {
-      if (positionsRef.current.length >= 4) return;
-      if (Math.random() > 0.3) return;
-
-      const availableSymbols = TRADING_PAIRS.filter(
-        s => pricesRef.current[s] && !positionsRef.current.find(p => p.symbol === s)
-      );
-      if (availableSymbols.length === 0) return;
-
-      const symbol = pickRandom(availableSymbols);
-      const price = pricesRef.current[symbol]?.price;
-      if (!price) return;
-
-      const side = Math.random() > 0.5 ? "LONG" : "SHORT";
-
-      addThought({
-        type: "SIGNAL",
-        title: `${symbol} ${side === "LONG" ? "Bullish" : "Bearish"} Setup Detected`,
-        content: [
-          side === "LONG" 
-            ? `Price breaking above ${randomBetween(1, 3).toFixed(0)}H resistance at $${(price * 0.99).toLocaleString()}.`
-            : `Price rejected at ${randomBetween(1, 3).toFixed(0)}H resistance near $${(price * 1.01).toLocaleString()}.`,
-          `Volume surge: ${randomBetween(150, 300).toFixed(0)}% above average.`,
-          `Momentum indicators ${side === "LONG" ? "turning bullish" : "showing weakness"}.`,
-        ],
-      });
-
-      setTimeout(() => {
-        openPosition(symbol, side, price);
-      }, 2000);
-    }, 25000);
-
-    return () => {
-      clearInterval(actionInterval);
-      clearInterval(analysisInterval);
-      clearInterval(tradeInterval);
-    };
-  }, [prices, addThought, openPosition]);
+      return () => {
+        clearInterval(actionInterval);
+        clearInterval(analysisInterval);
+        clearInterval(tradeInterval);
+      };
+    }, [prices, addThought, openPosition]);
 
   return (
     <TradingContext.Provider value={{ positions, closedTrades, stats, thoughts, isAiActive, currentAction, pnlHistory }}>
