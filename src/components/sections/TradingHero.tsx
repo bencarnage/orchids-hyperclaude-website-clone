@@ -90,7 +90,7 @@ export default function TradingHero() {
               </motion.p>
             </div>
 
-            <MiniEquityCurve pnl={stats.totalPnl} />
+            <MiniEquityCurve pnlHistory={pnlHistory} />
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
               {heroStats.map((stat, index) => (
