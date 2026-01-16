@@ -134,26 +134,43 @@ export default function TradingHero() {
   );
 }
 
-function MiniEquityCurve({ pnl }: { pnl: number }) {
-  const isProfit = pnl >= 0;
-  const points = [
-    0, 5, 3, 8, 12, 10, 15, 18, 16, 22, 25, 23, 28, 32, 30, 35, 40, 38, 
-    42, 48, 45, 52, 58, 55, 62, 68, 72, 70, 78, 85, 82, 90, 95, 100
-  ];
-  
-  const width = 100;
-  const height = 40;
-  const maxVal = Math.max(...points);
-  
-  const pathData = points
-    .map((val, i) => {
-      const x = (i / (points.length - 1)) * width;
-      const y = height - (val / maxVal) * height;
-      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-    })
-    .join(' ');
+function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
+  const { pathData, areaPath, isProfit, minVal, maxVal } = useMemo(() => {
+    if (pnlHistory.length < 2) {
+      return { pathData: "", areaPath: "", isProfit: true, minVal: 0, maxVal: 100 };
+    }
 
-  const areaPath = pathData + ` L ${width} ${height} L 0 ${height} Z`;
+    const values = pnlHistory.map(p => p.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const padding = (max - min) * 0.1 || 1;
+    const minV = min - padding;
+    const maxV = max + padding;
+    
+    const width = 100;
+    const height = 40;
+    
+    const path = pnlHistory
+      .map((point, i) => {
+        const x = (i / (pnlHistory.length - 1)) * width;
+        const y = height - ((point.value - minV) / (maxV - minV)) * height;
+        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+      })
+      .join(' ');
+
+    const area = path + ` L ${width} ${height} L 0 ${height} Z`;
+    const lastValue = pnlHistory[pnlHistory.length - 1]?.value || 0;
+    const firstValue = pnlHistory[0]?.value || 0;
+    
+    return { 
+      pathData: path, 
+      areaPath: area, 
+      isProfit: lastValue >= firstValue,
+      minVal: minV,
+      maxVal: maxV
+    };
+  }, [pnlHistory]);
+
   const color = isProfit ? "#00ff88" : "#ff3b5c";
   const colorRgba = isProfit ? "rgba(0, 255, 136, 0.3)" : "rgba(255, 59, 92, 0.3)";
 
