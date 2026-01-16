@@ -103,13 +103,13 @@ export default function TradingHero() {
                 >
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     {stat.icon && <stat.icon className="w-4 h-4 text-warning" />}
-                    <span className={`text-xl md:text-2xl font-bold font-mono ${
-                      stat.color === "profit" ? "text-profit" : 
-                      stat.color === "loss" ? "text-loss" :
-                      stat.color === "warning" ? "text-warning" : "text-primary"
-                    }`}>
-                      {stat.prefix}<NumberFlow value={Math.abs(stat.value)} format={{ minimumFractionDigits: stat.suffix === "M" ? 1 : 0, maximumFractionDigits: stat.suffix === "M" ? 1 : 1 }} />{stat.suffix}
-                    </span>
+                      <span className={`text-xl md:text-2xl font-bold font-mono ${
+                        stat.color === "profit" ? "text-profit" : 
+                        stat.color === "loss" ? "text-loss" :
+                        stat.color === "warning" ? "text-warning" : "text-primary"
+                      }`}>
+                        {stat.prefix}<NumberFlow value={Math.abs(stat.value)} format={{ minimumFractionDigits: stat.suffix === "K" ? 0 : 0, maximumFractionDigits: stat.suffix === "K" ? 0 : 1 }} />{stat.suffix}
+                      </span>
                   </div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">
                     {stat.label}
