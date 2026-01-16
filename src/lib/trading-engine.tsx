@@ -155,6 +155,14 @@ function seededPickRandom<T>(rand: () => number, arr: T[]): T {
   return arr[Math.floor(rand() * arr.length)];
 }
 
+function randomBetween(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function generateInitialPnlHistory(basePnl: number): PnlDataPoint[] {
   const history: PnlDataPoint[] = [];
   const now = Date.now();
