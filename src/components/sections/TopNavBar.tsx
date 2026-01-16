@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, ExternalLink, Zap } from "lucide-react";
+import { Activity, Zap, Copy, Check } from "lucide-react";
 import { useTrading } from "@/lib/trading-engine";
+import { useState } from "react";
 
 const navLinks = [
   { label: "Dashboard", href: "#dashboard" },
@@ -10,13 +11,18 @@ const navLinks = [
   { label: "Thoughts", href: "#thoughts" },
 ];
 
-const socialLinks = [
-  { label: "Twitter", href: "https://twitter.com/hyperclaude", icon: "𝕏" },
-  { label: "Telegram", href: "https://t.me/hyperclaude", icon: "✈" },
-];
+const CONTRACT_ADDRESS = "";
 
 export default function TopNavBar() {
   const { isAiActive, currentAction } = useTrading();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyAddress = () => {
+    if (!CONTRACT_ADDRESS) return;
+    navigator.clipboard.writeText(CONTRACT_ADDRESS);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <motion.nav
@@ -63,26 +69,28 @@ export default function TopNavBar() {
 
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2">
-              {socialLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-light rounded-lg transition-all duration-200 border border-transparent hover:border-border"
-                >
-                  <span className="text-base">{link.icon}</span>
-                </a>
-              ))}
               <a
-                href="https://app.hyperliquid.xyz"
+                href="https://twitter.com/hyperclaude"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-surface-light rounded-lg transition-all duration-200 border border-transparent hover:border-border"
+                className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-light rounded-lg transition-all duration-200 border border-transparent hover:border-border"
               >
-                <span>Hyperliquid</span>
-                <ExternalLink className="w-3 h-3" />
+                <span className="text-base">𝕏</span>
               </a>
+              
+              {CONTRACT_ADDRESS ? (
+                <button
+                  onClick={handleCopyAddress}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-surface-light rounded-lg transition-all duration-200 border border-border/50 hover:border-border"
+                >
+                  <span className="max-w-[80px] truncate">{CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}</span>
+                  {copied ? <Check className="w-3 h-3 text-profit" /> : <Copy className="w-3 h-3" />}
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-muted-foreground/50 rounded-lg border border-border/30">
+                  <span>CA: TBA</span>
+                </div>
+              )}
             </div>
 
             <AIStatusBadge isActive={isAiActive} action={currentAction} />
