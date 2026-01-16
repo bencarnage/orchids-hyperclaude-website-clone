@@ -55,6 +55,11 @@ export interface TradingStats {
   volume24h: number;
 }
 
+export interface PnlDataPoint {
+  timestamp: number;
+  value: number;
+}
+
 export interface ThoughtLog {
   id: string;
   time: string;
