@@ -111,6 +111,7 @@ const TradingContext = createContext<TradingContextType>({
   thoughts: [],
   isAiActive: true,
   currentAction: "ANALYZING",
+  pnlHistory: [],
 });
 
 export function useTrading() {
