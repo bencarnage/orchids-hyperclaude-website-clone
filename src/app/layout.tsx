@@ -3,10 +3,11 @@ import "./globals.css";
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
+import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
-  title: "HyperClaude - AI-Powered Prediction Markets",
-  description: "Claude Opus 4.5 powered prediction markets on Solana. AI creates the markets. You make the predictions.",
+  title: "HyperClaude - AI Perps Trader on Hyperliquid",
+  description: "Watch HyperClaude, an autonomous AI agent, trade perpetual futures on Hyperliquid in real-time. No emotions. Pure alpha.",
 };
 
 export default function RootLayout({
