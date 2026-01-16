@@ -2,7 +2,6 @@
 
 import TopNavBar from "@/components/sections/TopNavBar";
 import TradingHero from "@/components/sections/TradingHero";
-import TradingDashboard from "@/components/sections/TradingDashboard";
 import RecentTradesTicker from "@/components/sections/RecentTradesTicker";
 import PerformanceStats from "@/components/sections/PerformanceStats";
 import FooterLinks from "@/components/sections/FooterLinks";
@@ -18,7 +17,6 @@ export default function Home() {
       
       <main className="relative">
         <TradingHero />
-        <TradingDashboard />
         <RecentTradesTicker />
         <PerformanceStats />
         <FooterLinks />
