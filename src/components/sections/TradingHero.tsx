@@ -251,5 +251,3 @@ function StatBadge({
     </div>
   );
 }
-
-const INITIAL_INVESTMENT = 5000;
