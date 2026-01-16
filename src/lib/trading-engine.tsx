@@ -164,24 +164,24 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   const [closedTrades, setClosedTrades] = useState<ClosedTrade[]>([]);
   const [thoughts, setThoughts] = useState<ThoughtLog[]>([]);
   const [stats, setStats] = useState<TradingStats>({
-    totalPnl: 47832.5,
-    todayPnl: 2341.2,
+    totalPnl: 5000,
+    todayPnl: 234.5,
     winRate: 68.4,
     totalTrades: 1847,
     winStreak: 12,
     currentStreak: 7,
-    bestTrade: 4230,
-    worstTrade: -890,
-    avgWin: 187,
-    avgLoss: -89,
+    bestTrade: 420,
+    worstTrade: -89,
+    avgWin: 45,
+    avgLoss: -22,
     sharpeRatio: 2.4,
     maxDrawdown: 8.3,
     profitFactor: 2.8,
-    volume24h: 1200000,
+    volume24h: 120000,
   });
   const [isAiActive] = useState(true);
   const [currentAction, setCurrentAction] = useState("ANALYZING");
-  const [pnlHistory, setPnlHistory] = useState<PnlDataPoint[]>(() => generateInitialPnlHistory(47832.5));
+  const [pnlHistory, setPnlHistory] = useState<PnlDataPoint[]>(() => generateInitialPnlHistory(5000));
   const fluctuationCycleRef = useRef(0);
   const lastGrowthRef = useRef(Date.now());
   
