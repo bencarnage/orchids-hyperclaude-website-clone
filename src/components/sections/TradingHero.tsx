@@ -3,7 +3,8 @@
 import { motion } from "framer-motion";
 import { TrendingUp, Trophy, Flame, BarChart3, Clock } from "lucide-react";
 import NumberFlow from "@number-flow/react";
-import { useTrading } from "@/lib/trading-engine";
+import { useTrading, PnlDataPoint } from "@/lib/trading-engine";
+import { useMemo } from "react";
 
 export default function TradingHero() {
   const { stats, positions } = useTrading();
