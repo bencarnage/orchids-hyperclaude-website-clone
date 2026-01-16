@@ -136,6 +136,28 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function generateInitialPnlHistory(basePnl: number): PnlDataPoint[] {
+  const history: PnlDataPoint[] = [];
+  const now = Date.now();
+  const pointCount = 50;
+  let currentValue = basePnl * 0.4;
+  
+  for (let i = 0; i < pointCount; i++) {
+    const progress = i / (pointCount - 1);
+    const targetValue = basePnl * (0.4 + progress * 0.6);
+    const fluctuation = (Math.random() - 0.45) * basePnl * 0.08;
+    currentValue = targetValue + fluctuation;
+    currentValue = Math.max(currentValue, basePnl * 0.2);
+    
+    history.push({
+      timestamp: now - (pointCount - 1 - i) * 60000,
+      value: Math.round(currentValue * 100) / 100,
+    });
+  }
+  
+  return history;
+}
+
 export function TradingProvider({ children }: { children: ReactNode }) {
   const { prices } = usePrices();
   const [positions, setPositions] = useState<Position[]>([]);
