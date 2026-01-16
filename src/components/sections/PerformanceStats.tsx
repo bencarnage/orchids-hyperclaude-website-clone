@@ -9,10 +9,14 @@ import {
   Zap, 
   Shield,
   Clock,
-  Award
+  Award,
+  DollarSign
 } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { useTrading } from "@/lib/trading-engine";
+import { useMemo } from "react";
+
+const INITIAL_INVESTMENT = 5000;
 
 interface StatCard {
   label: string;
@@ -26,16 +30,31 @@ interface StatCard {
 }
 
 export default function PerformanceStats() {
-  const { stats } = useTrading();
+  const { stats, positions } = useTrading();
+
+  const positionsPnl = useMemo(() => {
+    return positions.reduce((sum, pos) => sum + pos.pnl, 0);
+  }, [positions]);
+
+  const pnlPercent = (positionsPnl / INITIAL_INVESTMENT) * 100;
 
   const performanceStats: StatCard[] = [
+    {
+      label: "Live P&L",
+      value: positionsPnl,
+      prefix: positionsPnl >= 0 ? "+$" : "-$",
+      icon: DollarSign,
+      color: positionsPnl >= 0 ? "profit" : "loss",
+      trend: positionsPnl >= 0 ? "up" : "down",
+      subValue: `${pnlPercent >= 0 ? "+" : ""}${pnlPercent.toFixed(2)}% from $${INITIAL_INVESTMENT.toLocaleString()}`,
+    },
     {
       label: "Sharpe Ratio",
       value: stats.sharpeRatio,
       icon: BarChart3,
       color: "primary",
       trend: "up",
-      subValue: "Excellent risk-adjusted returns",
+      subValue: "Risk-adjusted returns",
     },
     {
       label: "Max Drawdown",
@@ -63,14 +82,6 @@ export default function PerformanceStats() {
       subValue: "Risk managed",
     },
     {
-      label: "Avg Duration",
-      value: 23,
-      suffix: "m",
-      icon: Clock,
-      color: "primary",
-      subValue: "Per trade",
-    },
-    {
       label: "Best Streak",
       value: stats.winStreak,
       icon: Award,
@@ -91,7 +102,7 @@ export default function PerformanceStats() {
       icon: Zap,
       color: "primary",
       trend: "up",
-      subValue: "Gross profit / Gross loss",
+      subValue: "Gross profit / loss",
     },
   ];
 
@@ -110,7 +121,7 @@ export default function PerformanceStats() {
               PERFORMANCE <span className="text-primary">METRICS</span>
             </h3>
             <p className="text-muted-foreground text-sm">
-              Real-time trading statistics and performance analytics
+              Real-time trading statistics synced with live positions
             </p>
           </div>
 
@@ -185,8 +196,8 @@ function StatCardComponent({ stat, index }: { stat: StatCard; index: number }) {
 
         <div className="mb-1">
           <span className={`text-2xl md:text-3xl font-bold font-mono ${colors.text}`}>
-            {stat.prefix}
-            <NumberFlow value={stat.value} format={{ minimumFractionDigits: stat.suffix === "%" || stat.label.includes("Ratio") || stat.label.includes("Factor") ? 1 : 0, maximumFractionDigits: 1 }} />
+            {stat.prefix?.replace("-$", "-$").replace("+$", "+$")}
+            <NumberFlow value={Math.abs(stat.value)} format={{ minimumFractionDigits: stat.suffix === "%" || stat.label.includes("Ratio") || stat.label.includes("Factor") ? 1 : 0, maximumFractionDigits: stat.label === "Live P&L" ? 2 : 1 }} />
             {stat.suffix}
           </span>
         </div>
