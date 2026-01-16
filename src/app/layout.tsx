@@ -35,7 +35,7 @@ export default function RootLayout({
           data-debug="true"
           data-custom-data='{"appName": "YourApp", "version": "1.0.0", "greeting": "hi"}'
         />
-        {children}
+        <Providers>{children}</Providers>
         <VisualEditsMessenger />
       </body>
     </html>
