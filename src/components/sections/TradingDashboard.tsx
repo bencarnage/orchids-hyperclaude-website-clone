@@ -33,256 +33,259 @@ export default function TradingDashboard() {
   const isAnalyzing = currentAction === "ANALYZING" || currentAction === "SCANNING";
 
   return (
-    <section id="positions" className="py-8">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
-                    <Layers className="w-5 h-5 text-primary" />
+      <section id="positions" className="py-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                id="thoughts"
+              >
+              <div className="rounded-xl overflow-hidden border border-border bg-surface/80 backdrop-blur-sm h-[560px] flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 bg-surface-light border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1.5">
+                      <span className="w-3 h-3 rounded-full bg-loss/80" />
+                      <span className="w-3 h-3 rounded-full bg-warning/80" />
+                      <span className="w-3 h-3 rounded-full bg-profit/80" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Brain className="w-4 h-4 text-primary" />
+                      <span className="font-mono text-sm text-foreground">hyperclaude.log</span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-display text-lg font-bold tracking-wide">LIVE POSITIONS</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {positions.length === 0 ? "Scanning..." : `${positions.length} active`}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${
+                      isAnalyzing 
+                        ? "bg-primary/10 text-primary border border-primary/30" 
+                        : "bg-profit/10 text-profit border border-profit/30"
+                    }`}>
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${
+                          isAnalyzing ? "bg-primary" : "bg-profit"
+                        }`} />
+                        <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
+                          isAnalyzing ? "bg-primary" : "bg-profit"
+                        }`} />
+                      </span>
+                      {currentAction}
+                    </div>
+                    <Terminal className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
-                {positions.length > 0 && (
-                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
-                    totalPnl >= 0 
-                      ? "bg-profit/10 border border-profit/30" 
-                      : "bg-loss/10 border border-loss/30"
-                  }`}>
-                    {totalPnl >= 0 ? (
-                      <TrendingUp className="w-4 h-4 text-profit" />
-                    ) : (
-                      <TrendingDown className="w-4 h-4 text-loss" />
-                    )}
-                    <span className={`font-mono font-bold ${totalPnl >= 0 ? "text-profit" : "text-loss"}`}>
-                      {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
+
+                <div
+                  ref={scrollRef}
+                  className="flex-1 overflow-y-auto terminal-scrollbar p-3 space-y-2"
+                >
+                  {thoughts.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <motion.div
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="text-center"
+                      >
+                        <Brain className="w-10 h-10 text-primary/50 mx-auto mb-3" />
+                        <p className="text-muted-foreground text-sm">Initializing...</p>
+                      </motion.div>
+                    </div>
+                  ) : (
+                    <AnimatePresence>
+                      {thoughts.map((log, index) => (
+                        <LogEntry key={log.id} log={log} index={index} />
+                      ))}
+                    </AnimatePresence>
+                  )}
+                  
+                  <motion.div
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="flex items-center gap-2 text-muted-foreground py-2"
+                  >
+                    <span className="w-2 h-4 bg-primary animate-pulse" />
+                    <span className="font-mono text-xs">Processing...</span>
+                  </motion.div>
+                </div>
+
+                <div className="flex items-center justify-between px-3 py-2 bg-surface-light border-t border-border text-xs font-mono">
+                  <div className="flex items-center gap-3">
+                    <span className="text-muted-foreground">
+                      Open: <span className="text-primary">{positions.length}</span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      Today: <span className={stats.todayPnl >= 0 ? "text-profit" : "text-loss"}>
+                        {stats.todayPnl >= 0 ? "+" : ""}${stats.todayPnl.toFixed(0)}
+                      </span>
                     </span>
                   </div>
-                )}
-              </div>
-
-              <div className="rounded-xl overflow-hidden border border-border bg-surface/80 backdrop-blur-sm h-[560px] flex flex-col">
-                {positions.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center p-8">
-                    <motion.div
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="flex flex-col items-center gap-4"
-                    >
-                      <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
-                        <Target className="w-8 h-8 text-primary" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-foreground font-semibold mb-1">Analyzing Markets</p>
-                        <p className="text-sm text-muted-foreground">Scanning for setups...</p>
-                      </div>
-                    </motion.div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex-1 overflow-y-auto terminal-scrollbar">
-                      <table className="w-full">
-                        <thead className="sticky top-0 bg-surface-light z-10">
-                          <tr className="border-b border-border">
-                            <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Asset</th>
-                            <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">Size</th>
-                            <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">Entry</th>
-                            <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">Mark</th>
-                            <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">PnL</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/50">
-                          <AnimatePresence>
-                            {positions.map((position, index) => (
-                              <motion.tr
-                                key={position.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ delay: index * 0.05 }}
-                                className="hover:bg-surface-elevated/50 transition-colors"
-                              >
-                                <td className="px-3 py-3">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center ${
-                                      position.side === "LONG" 
-                                        ? "bg-profit/10 border border-profit/30" 
-                                        : "bg-loss/10 border border-loss/30"
-                                    }`}>
-                                      {position.side === "LONG" ? (
-                                        <TrendingUp className="w-3 h-3 text-profit" />
-                                      ) : (
-                                        <TrendingDown className="w-3 h-3 text-loss" />
-                                      )}
-                                    </div>
-                                    <div>
-                                      <span className="font-mono font-semibold text-sm text-foreground">{position.symbol}</span>
-                                      <div className="flex items-center gap-1 mt-0.5">
-                                        <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${
-                                          position.side === "LONG"
-                                            ? "bg-profit/10 text-profit"
-                                            : "bg-loss/10 text-loss"
-                                        }`}>
-                                          {position.side}
-                                        </span>
-                                        <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-primary/10 text-primary">
-                                          {position.leverage}x
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-3 py-3 text-right">
-                                  <span className="font-mono text-xs text-foreground">${position.sizeUsd.toFixed(0)}</span>
-                                </td>
-                                <td className="px-3 py-3 text-right">
-                                  <span className="font-mono text-xs text-muted-foreground">${formatPrice(position.entryPrice)}</span>
-                                </td>
-                                <td className="px-3 py-3 text-right">
-                                  <span className="font-mono text-xs text-foreground">${formatPrice(position.markPrice)}</span>
-                                </td>
-                                <td className="px-3 py-3 text-right">
-                                  <div className="flex flex-col items-end">
-                                    <span className={`font-mono text-sm font-bold ${position.pnl >= 0 ? "text-profit" : "text-loss"}`}>
-                                      {position.pnl >= 0 ? "+" : ""}${position.pnl.toFixed(2)}
-                                    </span>
-                                    <span className={`text-[10px] font-mono ${position.pnl >= 0 ? "text-profit/70" : "text-loss/70"}`}>
-                                      {position.pnl >= 0 ? "+" : ""}{position.pnlPercent.toFixed(1)}%
-                                    </span>
-                                  </div>
-                                </td>
-                              </motion.tr>
-                            ))}
-                          </AnimatePresence>
-                        </tbody>
-                      </table>
-                    </div>
-                    
-                    <div className="flex items-center justify-between px-3 py-2 bg-surface-light border-t border-border text-xs">
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Target className="w-3 h-3" />
-                          Exp: <span className="text-foreground font-mono">${totalExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                        </span>
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Shield className="w-3 h-3" />
-                          <span className="text-profit font-mono">OK</span>
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="relative flex h-1.5 w-1.5">
-                          <span className="absolute inline-flex h-full w-full rounded-full bg-profit opacity-75 animate-ping" />
-                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-profit" />
-                        </span>
-                        <span className="text-muted-foreground font-mono">Live</span>
-                      </div>
-                    </div>
-                  </>
-                )}
+                  <span className="text-muted-foreground">
+                    Trades: <span className="text-foreground">{stats.totalTrades.toLocaleString()}</span>
+                  </span>
+                </div>
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              id="thoughts"
-            >
-            <div className="rounded-xl overflow-hidden border border-border bg-surface/80 backdrop-blur-sm h-[560px] flex flex-col">
-              <div className="flex items-center justify-between px-4 py-3 bg-surface-light border-b border-border">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-loss/80" />
-                    <span className="w-3 h-3 rounded-full bg-warning/80" />
-                    <span className="w-3 h-3 rounded-full bg-profit/80" />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-primary" />
-                    <span className="font-mono text-sm text-foreground">hyperclaude.log</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium ${
-                    isAnalyzing 
-                      ? "bg-primary/10 text-primary border border-primary/30" 
-                      : "bg-profit/10 text-profit border border-profit/30"
-                  }`}>
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${
-                        isAnalyzing ? "bg-primary" : "bg-profit"
-                      }`} />
-                      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
-                        isAnalyzing ? "bg-primary" : "bg-profit"
-                      }`} />
-                    </span>
-                    {currentAction}
-                  </div>
-                  <Terminal className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </div>
-
-              <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto terminal-scrollbar p-3 space-y-2"
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
               >
-                {thoughts.length === 0 ? (
-                  <div className="flex items-center justify-center h-full">
-                    <motion.div
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="text-center"
-                    >
-                      <Brain className="w-10 h-10 text-primary/50 mx-auto mb-3" />
-                      <p className="text-muted-foreground text-sm">Initializing...</p>
-                    </motion.div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                      <Layers className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-lg font-bold tracking-wide">LIVE POSITIONS</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {positions.length === 0 ? "Scanning..." : `${positions.length} active`}
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <AnimatePresence>
-                    {thoughts.map((log, index) => (
-                      <LogEntry key={log.id} log={log} index={index} />
-                    ))}
-                  </AnimatePresence>
-                )}
-                
-                <motion.div
-                  animate={{ opacity: [0.3, 1, 0.3] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="flex items-center gap-2 text-muted-foreground py-2"
-                >
-                  <span className="w-2 h-4 bg-primary animate-pulse" />
-                  <span className="font-mono text-xs">Processing...</span>
-                </motion.div>
-              </div>
-
-              <div className="flex items-center justify-between px-3 py-2 bg-surface-light border-t border-border text-xs font-mono">
-                <div className="flex items-center gap-3">
-                  <span className="text-muted-foreground">
-                    Open: <span className="text-primary">{positions.length}</span>
-                  </span>
-                  <span className="text-muted-foreground">
-                    Today: <span className={stats.todayPnl >= 0 ? "text-profit" : "text-loss"}>
-                      {stats.todayPnl >= 0 ? "+" : ""}${stats.todayPnl.toFixed(0)}
-                    </span>
-                  </span>
+                  {positions.length > 0 && (
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
+                      totalPnl >= 0 
+                        ? "bg-profit/10 border border-profit/30" 
+                        : "bg-loss/10 border border-loss/30"
+                    }`}>
+                      {totalPnl >= 0 ? (
+                        <TrendingUp className="w-4 h-4 text-profit" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4 text-loss" />
+                      )}
+                      <span className={`font-mono font-bold ${totalPnl >= 0 ? "text-profit" : "text-loss"}`}>
+                        {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <span className="text-muted-foreground">
-                  Trades: <span className="text-foreground">{stats.totalTrades.toLocaleString()}</span>
-                </span>
-              </div>
-            </div>
-          </motion.div>
+
+                <div className="rounded-xl overflow-hidden border border-border bg-surface/80 backdrop-blur-sm h-[560px] flex flex-col">
+                  {positions.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center p-8">
+                      <motion.div
+                        animate={{ opacity: [0.5, 1, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="flex flex-col items-center gap-4"
+                      >
+                        <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
+                          <Target className="w-8 h-8 text-primary" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-foreground font-semibold mb-1">Analyzing Markets</p>
+                          <p className="text-sm text-muted-foreground">Scanning for setups...</p>
+                        </div>
+                      </motion.div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-1 overflow-y-auto terminal-scrollbar">
+                        <table className="w-full">
+                          <thead className="sticky top-0 bg-surface-light z-10">
+                            <tr className="border-b border-border">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Asset</th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">Size</th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">Entry</th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">Mark</th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">PnL</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border/50">
+                            <AnimatePresence>
+                              {positions.map((position, index) => (
+                                <motion.tr
+                                  key={position.id}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, x: -20 }}
+                                  transition={{ delay: index * 0.05 }}
+                                  className="hover:bg-surface-elevated/50 transition-colors"
+                                >
+                                  <td className="px-3 py-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-6 h-6 rounded flex items-center justify-center ${
+                                        position.side === "LONG" 
+                                          ? "bg-profit/10 border border-profit/30" 
+                                          : "bg-loss/10 border border-loss/30"
+                                      }`}>
+                                        {position.side === "LONG" ? (
+                                          <TrendingUp className="w-3 h-3 text-profit" />
+                                        ) : (
+                                          <TrendingDown className="w-3 h-3 text-loss" />
+                                        )}
+                                      </div>
+                                      <div>
+                                        <span className="font-mono font-semibold text-sm text-foreground">{position.symbol}</span>
+                                        <div className="flex items-center gap-1 mt-0.5">
+                                          <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${
+                                            position.side === "LONG"
+                                              ? "bg-profit/10 text-profit"
+                                              : "bg-loss/10 text-loss"
+                                          }`}>
+                                            {position.side}
+                                          </span>
+                                          <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-primary/10 text-primary">
+                                            {position.leverage}x
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-3 py-3 text-right">
+                                    <span className="font-mono text-xs text-foreground">${position.sizeUsd.toFixed(0)}</span>
+                                  </td>
+                                  <td className="px-3 py-3 text-right">
+                                    <span className="font-mono text-xs text-muted-foreground">${formatPrice(position.entryPrice)}</span>
+                                  </td>
+                                  <td className="px-3 py-3 text-right">
+                                    <span className="font-mono text-xs text-foreground">${formatPrice(position.markPrice)}</span>
+                                  </td>
+                                  <td className="px-3 py-3 text-right">
+                                    <div className="flex flex-col items-end">
+                                      <span className={`font-mono text-sm font-bold ${position.pnl >= 0 ? "text-profit" : "text-loss"}`}>
+                                        {position.pnl >= 0 ? "+" : ""}${position.pnl.toFixed(2)}
+                                      </span>
+                                      <span className={`text-[10px] font-mono ${position.pnl >= 0 ? "text-profit/70" : "text-loss/70"}`}>
+                                        {position.pnl >= 0 ? "+" : ""}{position.pnlPercent.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                  </td>
+                                </motion.tr>
+                              ))}
+                            </AnimatePresence>
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      <div className="flex items-center justify-between px-3 py-2 bg-surface-light border-t border-border text-xs">
+                        <div className="flex items-center gap-3">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Target className="w-3 h-3" />
+                            Exp: <span className="text-foreground font-mono">${totalExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                          </span>
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Shield className="w-3 h-3" />
+                            <span className="text-profit font-mono">OK</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-profit opacity-75 animate-ping" />
+                            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-profit" />
+                          </span>
+                          <span className="text-muted-foreground font-mono">Live</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+          </div>
+        </div>
+      </section>
         </div>
       </div>
     </section>
