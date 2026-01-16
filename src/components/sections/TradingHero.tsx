@@ -1,29 +1,44 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, Trophy, Flame, BarChart3, Clock } from "lucide-react";
+import { TrendingUp, Trophy, Flame, BarChart3, Clock, Activity } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { useEffect, useState } from "react";
-
-const stats = [
-  { label: "Today", value: 2341.2, prefix: "+$", suffix: "", color: "profit" },
-  { label: "24H Volume", value: 1.2, prefix: "$", suffix: "M", color: "primary" },
-  { label: "Win Rate", value: 68.4, prefix: "", suffix: "%", color: "profit" },
-  { label: "Total Trades", value: 1847, prefix: "", suffix: "", color: "primary" },
-  { label: "Win Streak", value: 7, prefix: "", suffix: "", color: "warning", icon: Flame },
-];
+import { useTradingStore } from "@/lib/trading-simulation";
 
 export default function TradingHero() {
-  const [totalPnl, setTotalPnl] = useState(0);
-  const [pnlPercent, setPnlPercent] = useState(0);
+  const { totalPnl, todayPnl, totalTrades, winRate, winStreak, positions } = useTradingStore();
+  const [displayPnl, setDisplayPnl] = useState(0);
+  const [displayPercent, setDisplayPercent] = useState(0);
+  const [displayToday, setDisplayToday] = useState(0);
+  const [volume24h, setVolume24h] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTotalPnl(47832.5);
-      setPnlPercent(234.5);
+      setDisplayPnl(totalPnl);
+      setDisplayPercent(234.5 + (totalPnl - 47832.5) / 200);
+      setDisplayToday(todayPnl);
+      setVolume24h(1.2 + Math.random() * 0.3);
     }, 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [totalPnl, todayPnl]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDisplayPnl(totalPnl);
+      setDisplayPercent(234.5 + (totalPnl - 47832.5) / 200);
+      setDisplayToday(todayPnl);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [totalPnl, todayPnl]);
+
+  const stats = [
+    { label: "Today", value: displayToday, prefix: displayToday >= 0 ? "+$" : "-$", suffix: "", color: displayToday >= 0 ? "profit" : "loss", abs: true },
+    { label: "24H Volume", value: volume24h, prefix: "$", suffix: "M", color: "primary" },
+    { label: "Win Rate", value: winRate, prefix: "", suffix: "%", color: "profit" },
+    { label: "Total Trades", value: totalTrades, prefix: "", suffix: "", color: "primary" },
+    { label: "Win Streak", value: winStreak, prefix: "", suffix: "", color: "warning", icon: Flame },
+  ];
 
   return (
     <section id="dashboard" className="relative pt-24 pb-8 overflow-hidden">
@@ -47,6 +62,9 @@ export default function TradingHero() {
             <Clock className="w-4 h-4 text-primary" />
             <span className="text-sm text-muted-foreground">Trading on</span>
             <span className="text-sm font-semibold text-primary">Hyperliquid</span>
+            <span className="mx-2 text-border">|</span>
+            <Activity className="w-4 h-4 text-profit" />
+            <span className="text-sm text-muted-foreground">{positions.length} active</span>
           </motion.div>
 
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
@@ -67,26 +85,26 @@ export default function TradingHero() {
         >
           <div className="relative p-8 md:p-12 rounded-2xl bg-surface/50 border border-border backdrop-blur-sm">
             <div className="absolute inset-0 rounded-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-profit/5 via-transparent to-primary/5" />
+              <div className={`absolute inset-0 bg-gradient-to-br ${displayPnl >= 0 ? "from-profit/5 via-transparent to-primary/5" : "from-loss/5 via-transparent to-primary/5"}`} />
             </div>
             
             <div className="relative text-center mb-8">
               <p className="text-sm text-muted-foreground uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
-                <TrendingUp className="w-4 h-4 text-profit" />
+                <TrendingUp className={`w-4 h-4 ${displayPnl >= 0 ? "text-profit" : "text-loss"}`} />
                 Total Profit & Loss
               </p>
               <div className="flex items-baseline justify-center gap-2">
-                <span className="text-5xl md:text-7xl font-display font-bold text-profit text-glow-profit">
-                  +$<NumberFlow value={totalPnl} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
+                <span className={`text-5xl md:text-7xl font-display font-bold ${displayPnl >= 0 ? "text-profit text-glow-profit" : "text-loss text-glow-loss"}`}>
+                  {displayPnl >= 0 ? "+" : "-"}$<NumberFlow value={Math.abs(displayPnl)} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
                 </span>
               </div>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-lg text-profit/80 mt-2 font-mono"
+                className={`text-lg mt-2 font-mono ${displayPercent >= 0 ? "text-profit/80" : "text-loss/80"}`}
               >
-                +<NumberFlow value={pnlPercent} format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }} />% all time
+                {displayPercent >= 0 ? "+" : ""}<NumberFlow value={displayPercent} format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }} />% all time
               </motion.p>
             </div>
 
@@ -105,9 +123,12 @@ export default function TradingHero() {
                     {stat.icon && <stat.icon className="w-4 h-4 text-warning" />}
                     <span className={`text-xl md:text-2xl font-bold font-mono ${
                       stat.color === "profit" ? "text-profit" : 
+                      stat.color === "loss" ? "text-loss" :
                       stat.color === "warning" ? "text-warning" : "text-primary"
                     }`}>
-                      {stat.prefix}<NumberFlow value={stat.value} />{stat.suffix}
+                      {stat.abs ? (stat.value >= 0 ? "+$" : "-$") : stat.prefix}
+                      <NumberFlow value={stat.abs ? Math.abs(stat.value) : stat.value} format={{ minimumFractionDigits: stat.label === "24H Volume" ? 1 : stat.label === "Win Rate" ? 1 : 0, maximumFractionDigits: stat.label === "24H Volume" || stat.label === "Win Rate" ? 1 : 0 }} />
+                      {stat.suffix}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">
@@ -134,24 +155,45 @@ export default function TradingHero() {
 }
 
 function MiniEquityCurve() {
-  const points = [
-    0, 5, 3, 8, 12, 10, 15, 18, 16, 22, 25, 23, 28, 32, 30, 35, 40, 38, 
-    42, 48, 45, 52, 58, 55, 62, 68, 72, 70, 78, 85, 82, 90, 95, 100
-  ];
+  const [points, setPoints] = useState<number[]>([]);
+  
+  useEffect(() => {
+    const initialPoints = [
+      0, 5, 3, 8, 12, 10, 15, 18, 16, 22, 25, 23, 28, 32, 30, 35, 40, 38, 
+      42, 48, 45, 52, 58, 55, 62, 68, 72, 70, 78, 85, 82, 90, 95, 100
+    ];
+    setPoints(initialPoints);
+    
+    const interval = setInterval(() => {
+      setPoints(prev => {
+        const lastVal = prev[prev.length - 1];
+        const change = (Math.random() - 0.4) * 3;
+        const newVal = Math.max(50, Math.min(120, lastVal + change));
+        return [...prev.slice(1), newVal];
+      });
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  if (points.length === 0) return null;
   
   const width = 100;
   const height = 40;
   const maxVal = Math.max(...points);
+  const minVal = Math.min(...points);
+  const range = maxVal - minVal || 1;
   
   const pathData = points
     .map((val, i) => {
       const x = (i / (points.length - 1)) * width;
-      const y = height - (val / maxVal) * height;
+      const y = height - ((val - minVal) / range) * height;
       return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
     })
     .join(' ');
 
   const areaPath = pathData + ` L ${width} ${height} L 0 ${height} Z`;
+  const isUp = points[points.length - 1] > points[points.length - 2];
 
   return (
     <motion.div
@@ -176,7 +218,7 @@ function MiniEquityCurve() {
           fill="url(#curveGradient)"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
+          transition={{ duration: 0.5 }}
         />
         <motion.path
           d={pathData}
@@ -185,7 +227,7 @@ function MiniEquityCurve() {
           strokeWidth="0.5"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
-          transition={{ delay: 0.4, duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
         />
       </svg>
     </motion.div>
