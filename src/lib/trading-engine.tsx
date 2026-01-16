@@ -3,6 +3,25 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from "react";
 import { usePrices, simulatePriceMovement } from "./prices";
 
+const EPOCH_START = new Date("2025-01-01T00:00:00Z").getTime();
+const TIME_SLOT_MS = 5000;
+
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+
+function getTimeSlot(): number {
+  return Math.floor((Date.now() - EPOCH_START) / TIME_SLOT_MS);
+}
+
+function getSeededRandom(): () => number {
+  return seededRandom(getTimeSlot());
+}
+
 export interface Position {
   id: string;
   asset: string;
@@ -120,20 +139,20 @@ export function useTrading() {
 
 const TRADING_PAIRS = ["BTC", "ETH", "SOL", "AVAX", "ARB", "LINK", "DOGE", "OP", "INJ", "SUI"];
 
-function generateId() {
-  return Math.random().toString(36).substring(2, 15);
+function generateId(rand: () => number) {
+  return rand().toString(36).substring(2, 15);
 }
 
 function formatTime(date: Date = new Date()): string {
   return date.toLocaleTimeString("en-US", { hour12: false }).slice(0, 8);
 }
 
-function randomBetween(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
+function seededRandomBetween(rand: () => number, min: number, max: number): number {
+  return rand() * (max - min) + min;
 }
 
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+function seededPickRandom<T>(rand: () => number, arr: T[]): T {
+  return arr[Math.floor(rand() * arr.length)];
 }
 
 function generateInitialPnlHistory(basePnl: number): PnlDataPoint[] {
