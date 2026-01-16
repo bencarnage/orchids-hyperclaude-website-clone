@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, Trophy, Flame, BarChart3, Clock } from "lucide-react";
+import { TrendingUp, Trophy, Flame, BarChart3, Clock, LayoutDashboard } from "lucide-react";
 import NumberFlow from "@number-flow/react";
 import { useTrading, PnlDataPoint } from "@/lib/trading-engine";
 import { useMemo } from "react";
@@ -15,15 +15,16 @@ export default function TradingHero() {
     return positions.reduce((sum, pos) => sum + pos.pnl, 0);
   }, [positions]);
 
-  const currentValue = INITIAL_INVESTMENT + positionsPnl;
-  const pnlPercent = (positionsPnl / INITIAL_INVESTMENT) * 100;
+  const currentValue = INITIAL_INVESTMENT + stats.todayPnl + positionsPnl;
+  const totalGain = stats.todayPnl + positionsPnl;
+  const pnlPercent = (totalGain / INITIAL_INVESTMENT) * 100;
 
   const heroStats = [
     { label: "Today", value: stats.todayPnl, prefix: stats.todayPnl >= 0 ? "+$" : "-$", suffix: "", color: stats.todayPnl >= 0 ? "profit" : "loss" },
     { label: "24H Volume", value: stats.volume24h / 1000, prefix: "$", suffix: "K", color: "primary" },
     { label: "Win Rate", value: stats.winRate, prefix: "", suffix: "%", color: "profit" },
     { label: "Total Trades", value: stats.totalTrades, prefix: "", suffix: "", color: "primary" },
-    { label: "Win Streak", value: stats.currentStreak, prefix: "", suffix: "", color: "warning", icon: Flame },
+    { label: "Win Streak", value: stats.winStreak, prefix: "", suffix: "", color: "warning", icon: Flame },
   ];
 
   return (
@@ -45,14 +46,14 @@ export default function TradingHero() {
             transition={{ delay: 0.1 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface border border-border mb-6"
           >
-            <Clock className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">Trading on</span>
-            <span className="text-sm font-semibold text-primary">Hyperliquid</span>
+            <LayoutDashboard className="w-4 h-4 text-primary" />
+            <span className="text-sm text-muted-foreground">Autonomous Trading</span>
+            <span className="text-sm font-semibold text-primary">Live Session</span>
           </motion.div>
 
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
             <span className="text-foreground">WATCH </span>
-            <span className="text-primary text-glow-primary">HYPERCLAUDE</span>
+            <span className="text-primary text-glow-primary">CLAUDE PERPS</span>
             <span className="text-foreground"> TRADE</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -67,11 +68,11 @@ export default function TradingHero() {
           className="max-w-4xl mx-auto"
         >
           <div className={`relative p-8 md:p-12 rounded-2xl bg-surface/50 border backdrop-blur-sm ${
-            positionsPnl >= 0 ? "border-profit/20" : "border-loss/20"
+            totalGain >= 0 ? "border-profit/20" : "border-loss/20"
           }`}>
             <div className="absolute inset-0 rounded-2xl overflow-hidden">
               <div className={`absolute inset-0 bg-gradient-to-br ${
-                positionsPnl >= 0 
+                totalGain >= 0 
                   ? "from-profit/5 via-transparent to-primary/5" 
                   : "from-loss/5 via-transparent to-primary/5"
               }`} />
@@ -79,30 +80,30 @@ export default function TradingHero() {
             
             <div className="relative text-center mb-8">
               <p className="text-sm text-muted-foreground uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
-                <TrendingUp className={`w-4 h-4 ${positionsPnl >= 0 ? "text-profit" : "text-loss"}`} />
-                Live P&L (from ${INITIAL_INVESTMENT.toLocaleString()} initial)
+                <TrendingUp className={`w-4 h-4 ${totalGain >= 0 ? "text-profit" : "text-loss"}`} />
+                Total Live P&L (from ${INITIAL_INVESTMENT.toLocaleString()} initial)
               </p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className={`text-5xl md:text-7xl font-display font-bold ${
-                  positionsPnl >= 0 ? "text-profit text-glow-profit" : "text-loss text-glow-loss"
+                  totalGain >= 0 ? "text-profit text-glow-profit" : "text-loss text-glow-loss"
                 }`}>
-                  {positionsPnl >= 0 ? "+" : ""}$<NumberFlow value={positionsPnl} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
+                  {totalGain >= 0 ? "+" : ""}$<NumberFlow value={totalGain} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
                 </span>
               </div>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className={`text-lg mt-2 font-mono ${positionsPnl >= 0 ? "text-profit/80" : "text-loss/80"}`}
+                className={`text-lg mt-2 font-mono ${totalGain >= 0 ? "text-profit/80" : "text-loss/80"}`}
               >
-                {positionsPnl >= 0 ? "+" : ""}<NumberFlow value={pnlPercent} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />%
+                {totalGain >= 0 ? "+" : ""}<NumberFlow value={pnlPercent} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />%
                 <span className="text-muted-foreground ml-2">
                   (${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} total)
                 </span>
               </motion.p>
             </div>
 
-            <MiniEquityCurve pnlHistory={pnlHistory} currentPnl={positionsPnl} />
+            <MiniEquityCurve pnlHistory={pnlHistory} totalValue={currentValue} />
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
               {heroStats.map((stat, index) => (
@@ -146,13 +147,13 @@ export default function TradingHero() {
   );
 }
 
-function MiniEquityCurve({ pnlHistory, currentPnl }: { pnlHistory: PnlDataPoint[]; currentPnl: number }) {
+function MiniEquityCurve({ pnlHistory, totalValue }: { pnlHistory: PnlDataPoint[]; totalValue: number }) {
   const { pathData, areaPath, isProfit } = useMemo(() => {
     const historyWithCurrent = [...pnlHistory];
     if (historyWithCurrent.length > 0) {
       historyWithCurrent[historyWithCurrent.length - 1] = {
         ...historyWithCurrent[historyWithCurrent.length - 1],
-        value: INITIAL_INVESTMENT + currentPnl,
+        value: totalValue,
       };
     }
 
@@ -186,7 +187,7 @@ function MiniEquityCurve({ pnlHistory, currentPnl }: { pnlHistory: PnlDataPoint[
       areaPath: area, 
       isProfit: lastValue >= INITIAL_INVESTMENT,
     };
-  }, [pnlHistory, currentPnl]);
+  }, [pnlHistory, totalValue]);
 
   const color = isProfit ? "#00ff88" : "#ff3b5c";
   const colorRgba = isProfit ? "rgba(0, 255, 136, 0.3)" : "rgba(255, 59, 92, 0.3)";
