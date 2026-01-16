@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, useMemo } from "react";
 import { usePrices, simulatePriceMovement } from "./prices";
 
 const EPOCH_START = new Date("2025-01-01T00:00:00Z").getTime();
@@ -130,7 +130,7 @@ const TradingContext = createContext<TradingContextType>({
   },
   thoughts: [],
   isAiActive: true,
-  currentAction: "ANALYZING",
+  currentAction: "TRADING",
   pnlHistory: [],
 });
 
@@ -140,8 +140,21 @@ export function useTrading() {
 
 const TRADING_PAIRS = ["BTC", "ETH", "SOL", "AVAX", "ARB", "LINK", "DOGE", "OP", "INJ", "SUI"];
 
-function generateTimeBasedId(prefix: string) {
-  return `${prefix}-${getTimeSlot()}-${Math.floor(Math.random() * 1000)}`;
+const BASE_PRICES: Record<string, number> = {
+  BTC: 105000,
+  ETH: 3800,
+  SOL: 180,
+  AVAX: 42,
+  ARB: 1.2,
+  LINK: 18,
+  DOGE: 0.38,
+  OP: 2.1,
+  INJ: 28,
+  SUI: 4.2,
+};
+
+function generateTimeBasedId(prefix: string, slot?: number) {
+  return `${prefix}-${slot ?? getTimeSlot()}-${Math.floor(Math.random() * 1000)}`;
 }
 
 function formatTime(date: Date = new Date()): string {
@@ -163,13 +176,12 @@ function generateInitialPnlHistory(baseValue: number): PnlDataPoint[] {
   const timeSlot = Math.floor(now / 60000);
   const rand = seededRandom(timeSlot);
   
-  let currentValue = baseValue * 0.95; // Start slightly below 5k
+  let currentValue = baseValue * 0.98;
   
   for (let i = 0; i < pointCount; i++) {
     const progress = i / (pointCount - 1);
-    // Slow uptrend
-    const targetValue = baseValue * (0.95 + progress * 0.06); 
-    const fluctuation = (rand() - 0.45) * baseValue * 0.01;
+    const targetValue = baseValue * (0.98 + progress * 0.03); 
+    const fluctuation = (rand() - 0.45) * baseValue * 0.005;
     currentValue = targetValue + fluctuation;
     
     history.push({
@@ -179,6 +191,97 @@ function generateInitialPnlHistory(baseValue: number): PnlDataPoint[] {
   }
   
   return history;
+}
+
+function generateHistoricalPositions(prices: Record<string, { price: number }>): Position[] {
+  const currentSlot = getTimeSlot();
+  const positions: Position[] = [];
+  
+  for (let i = 0; i < 5; i++) {
+    const slotOffset = i * 3;
+    const rand = seededRandom(currentSlot - slotOffset);
+    
+    if (rand() > 0.4) continue;
+    
+    const symbol = seededPickRandom(rand, TRADING_PAIRS);
+    const basePrice = prices[symbol]?.price || BASE_PRICES[symbol];
+    const side: "LONG" | "SHORT" = rand() > 0.5 ? "LONG" : "SHORT";
+    const leverage = seededPickRandom(rand, [3, 5, 10, 15, 20]);
+    const sizeUsd = seededRandomBetween(rand, 500, 2000);
+    const size = sizeUsd / basePrice;
+    
+    const entryOffset = (rand() - 0.5) * 0.01;
+    const entryPrice = basePrice * (1 + entryOffset);
+    const markOffset = (rand() - 0.45) * 0.015;
+    const markPrice = entryPrice * (1 + markOffset);
+    
+    const priceDiff = side === "LONG" 
+      ? markPrice - entryPrice 
+      : entryPrice - markPrice;
+    const pnl = priceDiff * size * leverage;
+    const pnlPercent = (priceDiff / entryPrice) * 100 * leverage;
+    
+    const slPercent = seededRandomBetween(rand, 0.01, 0.02);
+    const tpPercent = seededRandomBetween(rand, 0.02, 0.04);
+    
+    const stopLoss = side === "LONG" 
+      ? entryPrice * (1 - slPercent) 
+      : entryPrice * (1 + slPercent);
+    const takeProfit = side === "LONG" 
+      ? entryPrice * (1 + tpPercent) 
+      : entryPrice * (1 - tpPercent);
+    
+    const liqPrice = side === "LONG"
+      ? entryPrice * (1 - 0.9 / leverage)
+      : entryPrice * (1 + 0.9 / leverage);
+
+    positions.push({
+      id: generateTimeBasedId(`pos-${symbol}`, currentSlot - slotOffset),
+      asset: `${symbol}-PERP`,
+      symbol,
+      side,
+      size,
+      sizeUsd,
+      leverage,
+      entryPrice,
+      markPrice,
+      pnl: Math.round(pnl * 100) / 100,
+      pnlPercent: Math.round(pnlPercent * 100) / 100,
+      liquidationPrice: liqPrice,
+      openTime: Date.now() - slotOffset * TIME_SLOT_MS,
+      stopLoss,
+      takeProfit,
+    });
+  }
+  
+  return positions.slice(0, 3);
+}
+
+function generateHistoricalThoughts(): ThoughtLog[] {
+  const currentSlot = getTimeSlot();
+  const thoughts: ThoughtLog[] = [];
+  const thoughtTemplates = [
+    { type: "ANALYSIS" as const, title: "Market Analysis Complete", content: ["Scanning order flow patterns...", "Volatility within expected range"] },
+    { type: "MONITOR" as const, title: "Position Monitoring", content: ["All positions within risk parameters", "Trailing stops adjusted"] },
+    { type: "SIGNAL" as const, title: "Opportunity Detected", content: ["Momentum signal identified", "Evaluating entry conditions"] },
+  ];
+  
+  for (let i = 4; i >= 0; i--) {
+    const rand = seededRandom(currentSlot - i);
+    const template = seededPickRandom(rand, thoughtTemplates);
+    const time = new Date(Date.now() - i * 8000);
+    
+    thoughts.push({
+      id: generateTimeBasedId("thought", currentSlot - i),
+      time: formatTime(time),
+      timestamp: time.getTime(),
+      type: template.type,
+      title: template.title,
+      content: template.content,
+    });
+  }
+  
+  return thoughts;
 }
 
 export function TradingProvider({ children }: { children: ReactNode }) {
@@ -203,8 +306,9 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     volume24h: 120000,
   });
   const [isAiActive] = useState(true);
-  const [currentAction, setCurrentAction] = useState("ANALYZING");
+  const [currentAction, setCurrentAction] = useState("TRADING");
   const [pnlHistory, setPnlHistory] = useState<PnlDataPoint[]>(() => generateInitialPnlHistory(INITIAL_INVESTMENT));
+  const [initialized, setInitialized] = useState(false);
   
   const pricesRef = useRef(prices);
   const positionsRef = useRef(positions);
@@ -217,6 +321,17 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     positionsRef.current = positions;
   }, [positions]);
+
+  useEffect(() => {
+    if (initialized || Object.keys(prices).length === 0) return;
+    
+    const initialPositions = generateHistoricalPositions(prices);
+    const initialThoughts = generateHistoricalThoughts();
+    
+    setPositions(initialPositions);
+    setThoughts(initialThoughts);
+    setInitialized(true);
+  }, [prices, initialized]);
 
   useEffect(() => {
     const historyInterval = setInterval(() => {
@@ -366,7 +481,6 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     });
   }, [addThought]);
 
-  // Update position PnL based on prices
   useEffect(() => {
     if (Object.keys(prices).length === 0) return;
 
@@ -374,7 +488,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       setPositions((prev) => {
         return prev.map((pos) => {
           const currentPrice = pricesRef.current[pos.symbol]?.price || pos.markPrice;
-          const newMark = simulatePriceMovement(currentPrice, 0.0001); // Smaller moves for realism
+          const newMark = simulatePriceMovement(currentPrice, 0.0001);
           
           const priceDiff = pos.side === "LONG" 
             ? newMark - pos.entryPrice 
@@ -403,7 +517,6 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [prices, closePosition]);
 
-  // Deterministic trade generator
   useEffect(() => {
     if (Object.keys(prices).length === 0) return;
 
@@ -415,7 +528,6 @@ export function TradingProvider({ children }: { children: ReactNode }) {
       const rand = seededRandom(currentSlot);
       const val = rand();
 
-      // Every few slots, maybe open a trade if we have space
       if (positionsRef.current.length < 3 && val > 0.85) {
         const availableSymbols = TRADING_PAIRS.filter(s => pricesRef.current[s]);
         const symbol = seededPickRandom(rand, availableSymbols);
@@ -436,11 +548,8 @@ export function TradingProvider({ children }: { children: ReactNode }) {
         }, 2000);
       }
 
-      // Random thoughts
-      if (val < 0.2) {
-        const actions = ["ANALYZING", "SCANNING", "MONITORING", "CALCULATING"];
-        setCurrentAction(seededPickRandom(rand, actions));
-      }
+      const actions = ["TRADING", "MONITORING", "ANALYZING"];
+      setCurrentAction(seededPickRandom(rand, actions));
     }, 1000);
 
     return () => clearInterval(mainLoop);
