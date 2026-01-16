@@ -6,8 +6,17 @@ import NumberFlow from "@number-flow/react";
 import { useTrading, PnlDataPoint } from "@/lib/trading-engine";
 import { useMemo } from "react";
 
+const INITIAL_INVESTMENT = 5000;
+
 export default function TradingHero() {
   const { stats, positions, pnlHistory } = useTrading();
+
+  const positionsPnl = useMemo(() => {
+    return positions.reduce((sum, pos) => sum + pos.pnl, 0);
+  }, [positions]);
+
+  const currentValue = INITIAL_INVESTMENT + positionsPnl;
+  const pnlPercent = (positionsPnl / INITIAL_INVESTMENT) * 100;
 
   const heroStats = [
     { label: "Today", value: stats.todayPnl, prefix: stats.todayPnl >= 0 ? "+$" : "-$", suffix: "", color: stats.todayPnl >= 0 ? "profit" : "loss" },
@@ -58,11 +67,11 @@ export default function TradingHero() {
           className="max-w-4xl mx-auto"
         >
           <div className={`relative p-8 md:p-12 rounded-2xl bg-surface/50 border backdrop-blur-sm ${
-            stats.totalPnl >= 0 ? "border-profit/20" : "border-loss/20"
+            positionsPnl >= 0 ? "border-profit/20" : "border-loss/20"
           }`}>
             <div className="absolute inset-0 rounded-2xl overflow-hidden">
               <div className={`absolute inset-0 bg-gradient-to-br ${
-                stats.totalPnl >= 0 
+                positionsPnl >= 0 
                   ? "from-profit/5 via-transparent to-primary/5" 
                   : "from-loss/5 via-transparent to-primary/5"
               }`} />
@@ -70,27 +79,30 @@ export default function TradingHero() {
             
             <div className="relative text-center mb-8">
               <p className="text-sm text-muted-foreground uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
-                <TrendingUp className={`w-4 h-4 ${stats.totalPnl >= 0 ? "text-profit" : "text-loss"}`} />
-                Total Profit & Loss
+                <TrendingUp className={`w-4 h-4 ${positionsPnl >= 0 ? "text-profit" : "text-loss"}`} />
+                Live P&L (from ${INITIAL_INVESTMENT.toLocaleString()} initial)
               </p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className={`text-5xl md:text-7xl font-display font-bold ${
-                  stats.totalPnl >= 0 ? "text-profit text-glow-profit" : "text-loss text-glow-loss"
+                  positionsPnl >= 0 ? "text-profit text-glow-profit" : "text-loss text-glow-loss"
                 }`}>
-                  {stats.totalPnl >= 0 ? "+" : "-"}$<NumberFlow value={Math.abs(stats.totalPnl)} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
+                  {positionsPnl >= 0 ? "+" : ""}$<NumberFlow value={positionsPnl} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />
                 </span>
               </div>
               <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className={`text-lg mt-2 font-mono ${stats.totalPnl >= 0 ? "text-profit/80" : "text-loss/80"}`}
-                >
-                  {stats.totalPnl >= 0 ? "+" : ""}<NumberFlow value={(stats.totalPnl / 2000) * 100} format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }} />% all time
-                </motion.p>
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className={`text-lg mt-2 font-mono ${positionsPnl >= 0 ? "text-profit/80" : "text-loss/80"}`}
+              >
+                {positionsPnl >= 0 ? "+" : ""}<NumberFlow value={pnlPercent} format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }} />%
+                <span className="text-muted-foreground ml-2">
+                  (${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} total)
+                </span>
+              </motion.p>
             </div>
 
-            <MiniEquityCurve pnlHistory={pnlHistory} />
+            <MiniEquityCurve pnlHistory={pnlHistory} currentPnl={positionsPnl} />
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
               {heroStats.map((stat, index) => (
@@ -103,13 +115,13 @@ export default function TradingHero() {
                 >
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     {stat.icon && <stat.icon className="w-4 h-4 text-warning" />}
-                      <span className={`text-xl md:text-2xl font-bold font-mono ${
-                        stat.color === "profit" ? "text-profit" : 
-                        stat.color === "loss" ? "text-loss" :
-                        stat.color === "warning" ? "text-warning" : "text-primary"
-                      }`}>
-                        {stat.prefix}<NumberFlow value={Math.abs(stat.value)} format={{ minimumFractionDigits: stat.suffix === "K" ? 0 : 0, maximumFractionDigits: stat.suffix === "K" ? 0 : 1 }} />{stat.suffix}
-                      </span>
+                    <span className={`text-xl md:text-2xl font-bold font-mono ${
+                      stat.color === "profit" ? "text-profit" : 
+                      stat.color === "loss" ? "text-loss" :
+                      stat.color === "warning" ? "text-warning" : "text-primary"
+                    }`}>
+                      {stat.prefix}<NumberFlow value={Math.abs(stat.value)} format={{ minimumFractionDigits: stat.suffix === "K" ? 0 : 0, maximumFractionDigits: stat.suffix === "K" ? 0 : 1 }} />{stat.suffix}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider">
                     {stat.label}
@@ -134,13 +146,21 @@ export default function TradingHero() {
   );
 }
 
-function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
+function MiniEquityCurve({ pnlHistory, currentPnl }: { pnlHistory: PnlDataPoint[]; currentPnl: number }) {
   const { pathData, areaPath, isProfit } = useMemo(() => {
-    if (pnlHistory.length < 2) {
+    const historyWithCurrent = [...pnlHistory];
+    if (historyWithCurrent.length > 0) {
+      historyWithCurrent[historyWithCurrent.length - 1] = {
+        ...historyWithCurrent[historyWithCurrent.length - 1],
+        value: INITIAL_INVESTMENT + currentPnl,
+      };
+    }
+
+    if (historyWithCurrent.length < 2) {
       return { pathData: "", areaPath: "", isProfit: true };
     }
 
-    const values = pnlHistory.map(p => p.value);
+    const values = historyWithCurrent.map(p => p.value);
     const min = Math.min(...values);
     const max = Math.max(...values);
     const padding = (max - min) * 0.1 || 1;
@@ -150,24 +170,23 @@ function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
     const w = 100;
     const h = 40;
     
-    const path = pnlHistory
+    const path = historyWithCurrent
       .map((point, i) => {
-        const x = (i / (pnlHistory.length - 1)) * w;
+        const x = (i / (historyWithCurrent.length - 1)) * w;
         const y = h - ((point.value - minV) / (maxV - minV)) * h;
         return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
       })
       .join(' ');
 
     const area = path + ` L ${w} ${h} L 0 ${h} Z`;
-    const lastValue = pnlHistory[pnlHistory.length - 1]?.value || 0;
-    const firstValue = pnlHistory[0]?.value || 0;
+    const lastValue = historyWithCurrent[historyWithCurrent.length - 1]?.value || 0;
     
     return { 
       pathData: path, 
       areaPath: area, 
-      isProfit: lastValue >= firstValue,
+      isProfit: lastValue >= INITIAL_INVESTMENT,
     };
-  }, [pnlHistory]);
+  }, [pnlHistory, currentPnl]);
 
   const color = isProfit ? "#00ff88" : "#ff3b5c";
   const colorRgba = isProfit ? "rgba(0, 255, 136, 0.3)" : "rgba(255, 59, 92, 0.3)";
@@ -232,3 +251,5 @@ function StatBadge({
     </div>
   );
 }
+
+const INITIAL_INVESTMENT = 5000;
