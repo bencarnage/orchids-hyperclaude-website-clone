@@ -196,6 +196,58 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     positionsRef.current = positions;
   }, [positions]);
 
+  useEffect(() => {
+    const fluctuationInterval = setInterval(() => {
+      const now = Date.now();
+      fluctuationCycleRef.current += 1;
+      
+      setStats((prevStats) => {
+        let newPnl = prevStats.totalPnl;
+        let newTodayPnl = prevStats.todayPnl;
+        
+        const fluctuationPercent = (Math.random() - 0.5) * 0.1;
+        const fluctuationAmount = prevStats.totalPnl * fluctuationPercent;
+        newPnl += fluctuationAmount;
+        newTodayPnl += fluctuationAmount * 0.3;
+        
+        if (now - lastGrowthRef.current >= 420000) {
+          const growthPercent = 0.025 + Math.random() * 0.015;
+          const growthAmount = prevStats.totalPnl * growthPercent;
+          newPnl += growthAmount;
+          newTodayPnl += growthAmount * 0.5;
+          lastGrowthRef.current = now;
+        }
+        
+        newPnl = Math.max(newPnl, prevStats.totalPnl * 0.85);
+        
+        return {
+          ...prevStats,
+          totalPnl: Math.round(newPnl * 100) / 100,
+          todayPnl: Math.round(newTodayPnl * 100) / 100,
+        };
+      });
+      
+      setPnlHistory((prev) => {
+        const newHistory = [...prev];
+        
+        setStats((currentStats) => {
+          newHistory.push({
+            timestamp: now,
+            value: currentStats.totalPnl,
+          });
+          return currentStats;
+        });
+        
+        if (newHistory.length > 60) {
+          return newHistory.slice(-60);
+        }
+        return newHistory;
+      });
+    }, 5000);
+
+    return () => clearInterval(fluctuationInterval);
+  }, []);
+
   const addThought = useCallback((thought: Omit<ThoughtLog, "id" | "time" | "timestamp">) => {
     const newThought: ThoughtLog = {
       ...thought,
