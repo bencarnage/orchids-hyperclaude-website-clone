@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, Zap, Copy, Check } from "lucide-react";
+import { Activity, Copy, Check } from "lucide-react";
 import { useTrading } from "@/lib/trading-engine";
 import { useState } from "react";
+import Image from "next/image";
 
 const navLinks = [
   { label: "Dashboard", href: "#dashboard" },
@@ -12,6 +13,7 @@ const navLinks = [
 ];
 
 const CONTRACT_ADDRESS = "";
+const LOGO_URL = "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/project-uploads/025fcd57-8db7-4d7c-a032-584873a51655/claudeperps-1768524261661.jpg?width=8000&height=8000&resize=contain";
 
 export default function TopNavBar() {
   const { isAiActive, currentAction } = useTrading();
@@ -40,13 +42,19 @@ export default function TopNavBar() {
             >
               <div className="relative">
                 <div className="absolute inset-0 bg-primary/30 blur-lg rounded-full" />
-                <div className="relative w-10 h-10 rounded-lg bg-surface border border-primary/30 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-primary" />
+                <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-surface border border-primary/30 flex items-center justify-center">
+                  <Image 
+                    src={LOGO_URL} 
+                    alt="Claude Perps" 
+                    width={40} 
+                    height={40}
+                    className="object-cover"
+                  />
                 </div>
               </div>
               <div>
                 <h1 className="font-display text-lg font-bold tracking-wider text-foreground">
-                  HYPER<span className="text-primary">CLAUDE</span>
+                  CLAUDE<span className="text-primary">PERPS</span>
                 </h1>
                 <p className="text-[10px] text-muted-foreground tracking-widest uppercase -mt-1">
                   AI Perps Trader
@@ -70,7 +78,7 @@ export default function TopNavBar() {
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2">
               <a
-                href="https://twitter.com/hyperclaude"
+                href="https://x.com/claudeperp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface-light rounded-lg transition-all duration-200 border border-transparent hover:border-border"
