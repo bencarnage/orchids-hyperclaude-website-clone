@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Activity, ExternalLink, Zap } from "lucide-react";
+import { useTrading } from "@/lib/trading-engine";
 
 const navLinks = [
   { label: "Dashboard", href: "#dashboard" },
@@ -15,6 +16,8 @@ const socialLinks = [
 ];
 
 export default function TopNavBar() {
+  const { isAiActive, currentAction } = useTrading();
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
@@ -82,7 +85,7 @@ export default function TopNavBar() {
               </a>
             </div>
 
-            <AIStatusBadge />
+            <AIStatusBadge isActive={isAiActive} action={currentAction} />
           </div>
         </div>
       </div>
@@ -90,21 +93,32 @@ export default function TopNavBar() {
   );
 }
 
-function AIStatusBadge() {
+function AIStatusBadge({ isActive, action }: { isActive: boolean; action: string }) {
   return (
     <motion.div
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: 0.3 }}
-      className="flex items-center gap-2 px-4 py-2 rounded-full bg-profit/10 border border-profit/30"
+      className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+        isActive 
+          ? "bg-profit/10 border border-profit/30" 
+          : "bg-muted/10 border border-muted/30"
+      }`}
     >
       <span className="relative flex h-2.5 w-2.5">
-        <span className="absolute inline-flex h-full w-full rounded-full bg-profit opacity-75 animate-ping" />
-        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-profit" />
+        <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping ${
+          isActive ? "bg-profit" : "bg-muted-foreground"
+        }`} />
+        <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
+          isActive ? "bg-profit" : "bg-muted-foreground"
+        }`} />
       </span>
-      <span className="text-sm font-semibold text-profit tracking-wide flex items-center gap-1.5">
+      <span className={`text-sm font-semibold tracking-wide flex items-center gap-1.5 ${
+        isActive ? "text-profit" : "text-muted-foreground"
+      }`}>
         <Activity className="w-3.5 h-3.5" />
-        AI LIVE
+        <span className="hidden sm:inline">{action}</span>
+        <span className="sm:hidden">LIVE</span>
       </span>
     </motion.div>
   );
