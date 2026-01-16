@@ -173,6 +173,8 @@ function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
 
   const color = isProfit ? "#00ff88" : "#ff3b5c";
   const colorRgba = isProfit ? "rgba(0, 255, 136, 0.3)" : "rgba(255, 59, 92, 0.3)";
+  const width = 100;
+  const height = 40;
 
   return (
     <motion.div
@@ -192,21 +194,15 @@ function MiniEquityCurve({ pnlHistory }: { pnlHistory: PnlDataPoint[] }) {
             <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
           </linearGradient>
         </defs>
-        <motion.path
+        <path
           d={areaPath}
           fill="url(#curveGradient)"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
         />
-        <motion.path
+        <path
           d={pathData}
           fill="none"
           stroke={color}
           strokeWidth="0.5"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ delay: 0.4, duration: 1.5, ease: "easeOut" }}
         />
       </svg>
     </motion.div>
