@@ -86,6 +86,7 @@ interface TradingContextType {
   thoughts: ThoughtLog[];
   isAiActive: boolean;
   currentAction: string;
+  pnlHistory: PnlDataPoint[];
 }
 
 const TradingContext = createContext<TradingContextType>({
