@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { Copy, ExternalLink, Check, Zap } from "lucide-react";
 import { useState } from "react";
 
-const CONTRACT_ADDRESS = "opus3n6a...xyz123";
-const FULL_ADDRESS = "opus3n6aHyperClaudeContractAddressxyz123";
+const CONTRACT_ADDRESS = "";
+const FULL_ADDRESS = "";
 
 const socialLinks = [
   { 
@@ -13,18 +13,6 @@ const socialLinks = [
     href: "https://twitter.com/hyperclaude", 
     icon: "𝕏",
     description: "Follow for trade alerts"
-  },
-  { 
-    label: "Telegram", 
-    href: "https://t.me/hyperclaude", 
-    icon: "✈",
-    description: "Join the community"
-  },
-  { 
-    label: "Hyperliquid", 
-    href: "https://app.hyperliquid.xyz", 
-    icon: "◈",
-    description: "View on exchange"
   },
 ];
 
