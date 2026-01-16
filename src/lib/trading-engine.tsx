@@ -416,15 +416,16 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [prices, closePosition]);
 
-  useEffect(() => {
-    if (Object.keys(prices).length === 0) return;
+    useEffect(() => {
+      if (Object.keys(prices).length === 0) return;
 
-    const availableSymbols = TRADING_PAIRS.filter(s => prices[s]);
-    if (availableSymbols.length === 0) return;
+      const rand = getSeededRandom();
+      const availableSymbols = TRADING_PAIRS.filter(s => prices[s]);
+      if (availableSymbols.length === 0) return;
 
-    if (positions.length === 0) {
-      const symbol1 = pickRandom(availableSymbols);
-      const symbol2 = pickRandom(availableSymbols.filter(s => s !== symbol1));
+      if (positions.length === 0) {
+        const symbol1 = seededPickRandom(rand, availableSymbols);
+        const symbol2 = seededPickRandom(rand, availableSymbols.filter(s => s !== symbol1));
       
       if (prices[symbol1]) {
         setTimeout(() => {
