@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Thoughts", href: "#thoughts" },
 ];
 
-const CONTRACT_ADDRESS: string = "";
+const CONTRACT_ADDRESS: string = "2ojHY4G3PdZP3Ez9zUA2P7JdxKPjAsPiFkmSQFhCpump";
 const LOGO_URL = "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/project-uploads/025fcd57-8db7-4d7c-a032-584873a51655/claudeperps-1768524261661.jpg?width=8000&height=8000&resize=contain";
 
 export default function TopNavBar() {
@@ -88,12 +88,12 @@ export default function TopNavBar() {
               
               {CONTRACT_ADDRESS ? (
                 <button
-                  onClick={handleCopyAddress}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-surface-light rounded-lg transition-all duration-200 border border-border/50 hover:border-border"
-                >
-                  <span className="max-w-[80px] truncate">{CONTRACT_ADDRESS.slice(0, 6)}...{CONTRACT_ADDRESS.slice(-4)}</span>
-                  {copied ? <Check className="w-3 h-3 text-profit" /> : <Copy className="w-3 h-3" />}
-                </button>
+                    onClick={handleCopyAddress}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-muted-foreground hover:text-foreground hover:bg-surface-light rounded-lg transition-all duration-200 border border-border/50 hover:border-border"
+                  >
+                    <span>{CONTRACT_ADDRESS.slice(0, 4)}...{CONTRACT_ADDRESS.slice(-4)}</span>
+                    {copied ? <Check className="w-3 h-3 text-profit" /> : <Copy className="w-3 h-3" />}
+                  </button>
               ) : (
                 <div className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono text-muted-foreground/50 rounded-lg border border-border/30">
                   <span>CA: TBA</span>
