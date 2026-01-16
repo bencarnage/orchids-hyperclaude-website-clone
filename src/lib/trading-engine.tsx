@@ -250,13 +250,14 @@ export function TradingProvider({ children }: { children: ReactNode }) {
     setThoughts((prev) => [...prev.slice(-50), newThought]);
   }, []);
 
-  const openPosition = useCallback((symbol: string, side: "LONG" | "SHORT", price: number) => {
-    const leverage = pickRandom([3, 5, 10, 15, 20]);
-    const sizeUsd = randomBetween(500, 5000);
-    const size = sizeUsd / price;
-    
-    const slPercent = side === "LONG" ? randomBetween(0.01, 0.03) : randomBetween(0.01, 0.03);
-    const tpPercent = randomBetween(0.02, 0.06);
+    const openPosition = useCallback((symbol: string, side: "LONG" | "SHORT", price: number) => {
+      const rand = getSeededRandom();
+      const leverage = seededPickRandom(rand, [3, 5, 10, 15, 20]);
+      const sizeUsd = seededRandomBetween(rand, 500, 5000);
+      const size = sizeUsd / price;
+      
+      const slPercent = side === "LONG" ? seededRandomBetween(rand, 0.01, 0.03) : seededRandomBetween(rand, 0.01, 0.03);
+      const tpPercent = seededRandomBetween(rand, 0.02, 0.06);
     
     const stopLoss = side === "LONG" 
       ? price * (1 - slPercent) 
