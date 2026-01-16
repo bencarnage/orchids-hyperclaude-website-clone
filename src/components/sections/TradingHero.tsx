@@ -7,7 +7,7 @@ import { useTrading, PnlDataPoint } from "@/lib/trading-engine";
 import { useMemo } from "react";
 
 export default function TradingHero() {
-  const { stats, positions } = useTrading();
+  const { stats, positions, pnlHistory } = useTrading();
 
   const heroStats = [
     { label: "Today", value: stats.todayPnl, prefix: stats.todayPnl >= 0 ? "+$" : "-$", suffix: "", color: stats.todayPnl >= 0 ? "profit" : "loss" },
