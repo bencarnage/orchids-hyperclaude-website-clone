@@ -81,13 +81,13 @@ export default function TradingHero() {
                 </span>
               </div>
               <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className={`text-lg mt-2 font-mono ${stats.totalPnl >= 0 ? "text-profit/80" : "text-loss/80"}`}
-              >
-                {stats.totalPnl >= 0 ? "+" : ""}<NumberFlow value={(stats.totalPnl / 20000) * 100} format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }} />% all time
-              </motion.p>
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className={`text-lg mt-2 font-mono ${stats.totalPnl >= 0 ? "text-profit/80" : "text-loss/80"}`}
+                >
+                  {stats.totalPnl >= 0 ? "+" : ""}<NumberFlow value={(stats.totalPnl / 2000) * 100} format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }} />% all time
+                </motion.p>
             </div>
 
             <MiniEquityCurve pnlHistory={pnlHistory} />
