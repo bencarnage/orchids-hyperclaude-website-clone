@@ -573,7 +573,7 @@ export function TradingProvider({ children }: { children: ReactNode }) {
   }, [prices, addThought, openPosition]);
 
   return (
-    <TradingContext.Provider value={{ positions, closedTrades, stats, thoughts, isAiActive, currentAction }}>
+    <TradingContext.Provider value={{ positions, closedTrades, stats, thoughts, isAiActive, currentAction, pnlHistory }}>
       {children}
     </TradingContext.Provider>
   );
